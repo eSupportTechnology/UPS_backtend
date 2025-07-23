@@ -2,10 +2,10 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class UserCredentialsMail extends Mailable
 {
@@ -13,22 +13,25 @@ class UserCredentialsMail extends Mailable
 
     public $user;
     public $password;
+    public $roleName;
 
-    public function __construct($user, $password)
+    public function __construct(User $user, string $password, string $roleName)
     {
         $this->user = $user;
         $this->password = $password;
+        $this->roleName = $roleName;
     }
 
     public function build()
     {
-        return $this->subject('Your Account Credentials')
-            ->view('emails.user_credentials')
+        return $this->view('emails.user_credentials')
+            ->subject('Welcome to ' . config('app.name', 'Our Platform') . ' - Your Account Details')
             ->with([
                 'name' => $this->user->name,
                 'email' => $this->user->email,
                 'password' => $this->password,
-                'role' => $this->user->role_as,
+                'role' => $this->roleName,
+                'loginUrl' => config('app.url', 'http://localhost') . '/login'
             ]);
     }
 }
