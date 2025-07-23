@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
 Route::post('/admin/create-user', [AuthController::class, 'createUserWithAutoPassword']);
+Route::get('/admin/users', [UserController::class, 'getAllUsers']);
+Route::put('/admin/users/{id}', [UserController::class, 'updateUser']);
+Route::delete('/admin/users/{id}', [UserController::class, 'deleteUser']);
+
+Route::post('/admin/users/activate/{id}', [UserController::class, 'activateUser']);
+Route::post('/admin/users/deactivate/{id}', [UserController::class, 'deactivateUser']);
 
 // Public routes
 Route::prefix('auth')->group(function () {
