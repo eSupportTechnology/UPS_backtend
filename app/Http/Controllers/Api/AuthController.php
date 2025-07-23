@@ -7,7 +7,11 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use App\Mail\UserCredentialsMail;
 
 class AuthController extends Controller
 {
@@ -151,5 +155,44 @@ class AuthController extends Controller
             User::ROLE_CUSTOMER => ['customer:*'],
             default => ['customer:*'],
         };
+    }
+
+    public function createUserWithAutoPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'role_as' => ['required', 'integer', 'in:1,2,3,4,5'],
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $password = Str::random(10);
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($password),
+                'role_as' => $request->role_as,
+                'phone' => $request->phone,
+                'address' => $request->address,
+            ]);
+
+            Mail::to($user->email)->send(new UserCredentialsMail($user, $password));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User created and credentials sent via email',
+                'data' => $this->formatUserData($user)
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User creation failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
