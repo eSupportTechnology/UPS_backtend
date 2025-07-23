@@ -168,7 +168,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            $password = Str::random(10);
+            $password = Str::random(8);
 
             $user = User::create([
                 'name' => $request->name,
@@ -179,7 +179,9 @@ class AuthController extends Controller
                 'address' => $request->address,
             ]);
 
-            Mail::to($user->email)->send(new UserCredentialsMail($user, $password));
+            $roleName = $this->getRoleName($user->role_as);
+
+            Mail::to($user->email)->send(new UserCredentialsMail($user, $password, $roleName));
 
             return response()->json([
                 'status' => 'success',
@@ -194,5 +196,18 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function getRoleName(int $roleId): string
+    {
+        $roles = [
+            1 => 'Super Admin',
+            2 => 'Admin',
+            3 => 'Operator',
+            4 => 'Technician',
+            5 => 'Customer'
+        ];
+
+        return $roles[$roleId] ?? 'Unknown';
     }
 }
