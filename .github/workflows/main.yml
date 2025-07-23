@@ -1,0 +1,56 @@
+name: Deploy to Subdomains
+
+on:
+  push:
+    branches: [ main, staging, api ]
+
+jobs:
+  deploy-main:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Main Domain
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CPANEL_HOST }}
+        username: ${{ secrets.CPANEL_USERNAME }}
+        password: ${{ secrets.CPANEL_PASSWORD }}
+        script: |
+          cd /public_html/main-site
+          git pull origin main
+          php artisan config:cache
+          php artisan migrate 
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to Staging
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CPANEL_HOST }}
+        username: ${{ secrets.CPANEL_USERNAME }}
+        password: ${{ secrets.CPANEL_PASSWORD }}
+        script: |
+          cd /public_html/staging
+          git pull origin staging
+          php artisan config:cache
+          php artisan migrate
+
+  deploy-api:
+    if: github.ref == 'refs/heads/api'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to API
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.CPANEL_HOST }}
+        username: ${{ secrets.CPANEL_USERNAME }}
+        password: ${{ secrets.CPANEL_PASSWORD }}
+        script: |
+          cd /public_html/api
+          git pull origin api
+          php artisan config:cache
