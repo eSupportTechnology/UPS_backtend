@@ -1,13 +1,21 @@
 <?php
 
+use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
+//Users
 Route::post('/create-user', [AuthController::class, 'createUserWithAutoPassword']);
 Route::get('/all-users', [UserController::class, 'getAllUsers']);
 Route::put('/update-users/{id}', [UserController::class, 'updateUser']);
 Route::delete('/delete-users/{id}', [UserController::class, 'deleteUser']);
+
+//ShopInventory
+Route::get('/all-shopInventories', [ShopInventoryController::class, 'getAllShopInventories']);
+Route::post('/create-shopInventories', [ShopInventoryController::class, 'createShopInventory']);
+Route::put('/update-shopInventories/{id}', [ShopInventoryController::class, 'updateShopInventories']);
+Route::delete('/delete-shopInventories/{id}', [ShopInventoryController::class, 'deleteShopInventories']);
 
 Route::post('/admin/users/activate/{id}', [UserController::class, 'activateUser']);
 Route::post('/admin/users/deactivate/{id}', [UserController::class, 'deactivateUser']);
