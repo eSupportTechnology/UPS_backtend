@@ -12,7 +12,7 @@ class GetAllUsers
     {
         try {
             $users = User::select('id', 'name', 'email', 'role_as', 'phone', 'address', 'is_active')
-                ->get();
+                ->paginate(10);
 
             return CommonResponse::sendSuccessResponseWithData('users', $users);
         } catch (\Exception $e) {
