@@ -7,14 +7,17 @@ use App\Action\User\DeactivateUser;
 use App\Action\User\DeleteUser;
 use App\Action\User\GetAllUsers;
 use App\Action\User\UpdateUser;
+use App\Http\Requests\User\GetAllUsersRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function getAllUsers(GetAllUsers $getAllUsers): JsonResponse
+    public function getAllUsers(GetAllUsersRequest $request, GetAllUsers $getAllUsers): JsonResponse
     {
-        return response()->json($getAllUsers());
+        $result = $getAllUsers($request->validated());
+
+        return response()->json($result);
     }
 
     public function updateUser(string $id, UserUpdateRequest $request, UpdateUser $updateUser): JsonResponse
