@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,15 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::post('/create-shopInventories', [ShopInventoryController::class, 'createShopInventory']);
     Route::put('/update-shopInventories/{id}', [ShopInventoryController::class, 'updateShopInventories']);
     Route::delete('/delete-shopInventories/{id}', [ShopInventoryController::class, 'deleteShopInventories']);
+
+    // Branches
+    Route::get('/all-branches', [BranchController::class, 'getAllBranches']);
+    Route::post('/create-branch', [BranchController::class, 'createBranch']);
+    Route::put('/update-branch/{id}', [BranchController::class, 'updateBranch']);
+    Route::delete('/delete-branch/{id}', [BranchController::class, 'deleteBranch']);
+
+    Route::post('/admin/branches/activate/{id}', [BranchController::class, 'activateBranch']);
+    Route::post('/admin/branches/deactivate/{id}', [BranchController::class, 'deactivateBranch']);
 
 });
 
