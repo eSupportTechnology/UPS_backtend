@@ -28,8 +28,8 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::put('/update-users/{id}', [UserController::class, 'updateUser']);
     Route::delete('/delete-users/{id}', [UserController::class, 'deleteUser']);
 
-    Route::post('/admin/users/activate/{id}', [UserController::class, 'activateUser']);
-    Route::post('/admin/users/deactivate/{id}', [UserController::class, 'deactivateUser']);
+    Route::post('/users-activate/{id}', [UserController::class, 'activateUser']);
+    Route::post('/users-deactivate/{id}', [UserController::class, 'deactivateUser']);
 
     //ShopInventory
     Route::get('/all-shopInventories', [ShopInventoryController::class, 'getAllShopInventories']);
