@@ -23,7 +23,7 @@ class UserUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
+            'email' => 'required|string|email|max:255',
             'role_as' => ['required', 'integer', 'in:1,2,3,4,5'],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
