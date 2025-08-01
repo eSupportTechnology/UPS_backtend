@@ -3,70 +3,61 @@
 namespace App\Action\AMC;
 
 use App\Models\AMCContract;
+use App\Models\AMCMaintenance;
 use App\Response\CommonResponse;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
 class GetAllAMCContracts
 {
-    public function __invoke(array $filters = []): array
+    public function __invoke(): array
     {
         try {
-            $query = AMCContract::with(['branch', 'users'])->select('*');
+            $contracts = AMCContract::select([
+                'amc_contracts.id',
+                'amc_contracts.branch_id',
+                'branches.name as branch_name',
+                'amc_contracts.customer_id',
+                'users.name as customer_name',
+                'amc_contracts.contract_type',
+                'amc_contracts.purchase_date',
+                'amc_contracts.warranty_end_date',
+                'amc_contracts.contract_amount',
+                'amc_contracts.notes',
+                'amc_contracts.is_active',
+            ])
+                ->join('branches', 'amc_contracts.branch_id', '=', 'branches.id')
+                ->join('users', 'amc_contracts.customer_id', '=', 'users.id')
+                ->where('amc_contracts.is_active', true)
+                ->get()
+                ->keyBy('id');
 
-            $this->applyFilters($query, $filters);
-            $this->applySorting($query, $filters);
+            if ($contracts->isEmpty()) {
+                return CommonResponse::sendSuccessResponseWithData('AMCContract', $contracts);
+            }
 
-            $perPage = $filters['per_page'] ?? 10;
-            $contracts = $query->paginate($perPage);
+            $maintenances = AMCMaintenance::select([
+                'amc_contract_id',
+                'scheduled_date',
+                'completed_date',
+                'note',
+                'status'
+            ])
+                ->whereIn('amc_contract_id', $contracts->keys())
+                ->get()
+                ->groupBy('amc_contract_id');
 
-            return CommonResponse::sendSuccessResponseWithData('contracts', $contracts);
+
+            foreach ($contracts as $id => $contract) {
+                $contract->maintenances = $maintenances->get($id, collect())->values();
+            }
+
+            return CommonResponse::sendSuccessResponseWithData('AMCContract', $contracts->values());
         } catch (\Exception $e) {
-            Log::error('Failed to fetch AMC contracts: ' . $e->getMessage(), [
-                'filters' => $filters,
+            Log::error('Failed to fetch AMC contracts with maintenance: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
             return CommonResponse::sendBadResponseWithMessage('Error retrieving AMC contract list');
-        }
-    }
-
-    private function applyFilters(Builder $query, array $filters): void
-    {
-        if (!empty($filters['search'])) {
-            $search = trim($filters['search']);
-            $query->where(function ($q) use ($search) {
-                $q->where('contract_type', 'LIKE', "%{$search}%")
-                    ->orWhere('notes', 'LIKE', "%{$search}%");
-            });
-        }
-
-        if (!empty($filters['contract_type'])) {
-            $query->where('contract_type', 'LIKE', "%{$filters['contract_type']}%");
-        }
-
-        if (!empty($filters['branch_id'])) {
-            $query->where('branch_id', $filters['branch_id']);
-        }
-
-        if (!empty($filters['customer_id'])) {
-            $query->where('customer_id', $filters['customer_id']);
-        }
-
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
-        }
-    }
-
-    private function applySorting(Builder $query, array $filters): void
-    {
-        $sortBy = $filters['sort_by'] ?? 'created_at';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
-
-        $query->orderBy($sortBy, $sortDirection);
-
-        if ($sortBy !== 'id') {
-            $query->orderBy('id', 'desc');
         }
     }
 }
