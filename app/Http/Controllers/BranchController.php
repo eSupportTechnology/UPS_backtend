@@ -6,6 +6,7 @@ use App\Action\Branch\ActivateBranch;
 use App\Action\Branch\CreateBranch;
 use App\Action\Branch\DeactivateBranch;
 use App\Action\Branch\DeleteBranch;
+use App\Action\Branch\GetActiveBranches;
 use App\Action\Branch\GetAllBranches;
 use App\Action\Branch\UpdateBranch;
 use App\Http\Requests\Branch\BranchRequest;
@@ -46,5 +47,11 @@ class BranchController extends Controller
     public function deactivateBranch(string $id, DeactivateBranch $deactivateBranch): JsonResponse
     {
         return response()->json($deactivateBranch($id));
+    }
+    public function getActiveBranches(GetActiveBranches $getActiveBranches): JsonResponse
+    {
+        $result = $getActiveBranches();
+
+        return response()->json($result);
     }
 }
