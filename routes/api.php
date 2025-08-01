@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AMCContractController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\UserController;
@@ -30,6 +31,7 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     Route::post('/users-activate/{id}', [UserController::class, 'activateUser']);
     Route::post('/users-deactivate/{id}', [UserController::class, 'deactivateUser']);
+    Route::get('/active-customers', [UserController::class, 'getActiveCustomers']);
 
     //ShopInventory
     Route::get('/all-shopInventories', [ShopInventoryController::class, 'getAllShopInventories']);
@@ -45,6 +47,14 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     Route::post('/admin/branches/activate/{id}', [BranchController::class, 'activateBranch']);
     Route::post('/admin/branches/deactivate/{id}', [BranchController::class, 'deactivateBranch']);
+    Route::get('/active-branches', [BranchController::class, 'getActiveBranches']);
+
+    //AMCContract
+    Route::post('/create-contract', [AMCContractController::class, 'createContract']);
+    Route::get('/all-contract', [AMCContractController::class, 'getAllContract']);
+    Route::put('/update-amc-contract/{id}', [AMCContractController::class, 'updateAMCContract']);
+    Route::delete('/delete-amc-contract/{id}', [AMCContractController::class, 'deleteAMCContract']);
+
 
 });
 

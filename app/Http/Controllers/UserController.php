@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Action\User\ActivateUser;
 use App\Action\User\DeactivateUser;
 use App\Action\User\DeleteUser;
+use App\Action\User\GetActiveCustomers;
 use App\Action\User\GetAllUsers;
 use App\Action\User\UpdateUser;
 use App\Http\Requests\User\GetAllUsersRequest;
@@ -37,5 +38,11 @@ class UserController extends Controller
     public function deactivateUser(string $id, DeactivateUser $deactivateUser): JsonResponse
     {
         return response()->json($deactivateUser($id));
+    }
+    public function getActiveCustomers(GetActiveCustomers $getActiveCustomers): JsonResponse
+    {
+        $result = $getActiveCustomers();
+
+        return response()->json($result);
     }
 }
