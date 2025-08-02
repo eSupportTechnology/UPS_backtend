@@ -23,4 +23,20 @@ class AMCContract extends Model
         'notes',
         'is_active',
     ];
+
+    public function maintenances()
+    {
+        return $this->hasMany(AMCMaintenance::class, 'amc_contract_id', 'id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(User::class, 'customer_id', 'id');
+    }
+
 }

@@ -20,4 +20,10 @@ class AMCMaintenance extends Model
         'note',
         'status',
     ];
+
+    public function amcContract()
+    {
+        return $this->belongsTo(AMCContract::class, 'amc_contract_id', 'id');
+    }
+
 }
