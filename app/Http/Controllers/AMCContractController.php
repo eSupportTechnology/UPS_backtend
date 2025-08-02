@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Action\AMC\CreateAMCContract;
 use App\Action\AMC\DeleteAMCContract;
-use App\Action\AMC\GetAllAMCContracts;
+use App\Action\AMC\GetAllContracts;
 use App\Action\AMC\UpdateAMCContract;
 use App\Http\Requests\AMC\AMCContractRequest;
-use App\Http\Requests\AMC\GetAllAMCContractsRequest;
+use App\Http\Requests\AMC\GetAllContractsRequest;
 use Illuminate\Http\JsonResponse;
 
 class AMCContractController extends Controller
@@ -17,9 +17,9 @@ class AMCContractController extends Controller
         return response()->json($createAMCContract($request->validated()));
     }
 
-    public function getAllContract(GetAllAMCContractsRequest $request, GetAllAMCContracts $getAll): JsonResponse
+    public function getAllContract(GetAllContractsRequest $request, GetAllContracts $getAllContracts): JsonResponse
     {
-        $result = $getAll($request->validated());
+        $result = $getAllContracts($request->validated());
         return response()->json($result);
     }
 
