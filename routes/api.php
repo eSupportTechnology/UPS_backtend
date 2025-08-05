@@ -55,7 +55,8 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::put('/update-amc-contract/{id}', [AMCContractController::class, 'updateAMCContract']);
     Route::delete('/delete-amc-contract/{id}', [AMCContractController::class, 'deleteAMCContract']);
 
-
+    Route::post('/amc-contracts-activate/{id}', [AMCContractController::class, 'activateAMCContract']);
+    Route::post('/amc-contracts-deactivate/{id}', [AMCContractController::class, 'deactivateAMCContract']);
 });
 
 // Admin routes

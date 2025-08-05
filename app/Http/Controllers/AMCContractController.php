@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Action\AMC\ActivateAMCContract;
 use App\Action\AMC\CreateAMCContract;
+use App\Action\AMC\DeactivateAMCContract;
 use App\Action\AMC\DeleteAMCContract;
 use App\Action\AMC\GetAllContracts;
 use App\Action\AMC\UpdateAMCContract;
@@ -29,6 +31,16 @@ class AMCContractController extends Controller
     }
 
     public function deleteAMCContract(string $id, DeleteAMCContract $action): JsonResponse
+    {
+        return response()->json($action($id));
+    }
+
+    public function activateAMCContract(string $id, ActivateAMCContract $action): JsonResponse
+    {
+        return response()->json($action($id));
+    }
+
+    public function deactivateAMCContract(string $id, DeactivateAMCContract $action): JsonResponse
     {
         return response()->json($action($id));
     }
