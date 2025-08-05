@@ -3,6 +3,7 @@
 use App\Http\Controllers\AMCContractController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ShopInventoryController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -57,6 +58,11 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     Route::post('/amc-contracts-activate/{id}', [AMCContractController::class, 'activateAMCContract']);
     Route::post('/amc-contracts-deactivate/{id}', [AMCContractController::class, 'deactivateAMCContract']);
+
+    //Ticket
+    Route::get('/all-tickets', [TicketController::class, 'getAllTickets']);
+
+
 });
 
 // Admin routes
@@ -72,5 +78,10 @@ Route::middleware('technician')->prefix('technician')->group(function () {
 });
 
 // Customer routes
-Route::middleware('customer')->prefix('customer')->group(function () {
+Route::middleware(['auth:sanctum', 'customer'])->group(function () {
+
+    //Ticket
+    Route::post('/create-ticket', [TicketController::class, 'createTicket']);
+    Route::get('/tickets-customer/{customer_id}', [TicketController::class, 'getTicketsByCustomer']);
+
 });
