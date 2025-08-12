@@ -6,6 +6,7 @@ use App\Action\User\ActivateUser;
 use App\Action\User\DeactivateUser;
 use App\Action\User\DeleteUser;
 use App\Action\User\GetActiveCustomers;
+use App\Action\User\GetAllTechnicianUsers;
 use App\Action\User\GetAllUsers;
 use App\Action\User\UpdateUser;
 use App\Http\Requests\User\GetAllUsersRequest;
@@ -43,6 +44,12 @@ class UserController extends Controller
     {
         $result = $getActiveCustomers();
 
+        return response()->json($result);
+    }
+
+    public function getAllTechnicianUsers(GetAllTechnicianUsers $getAllTechnicianUsers): JsonResponse
+    {
+        $result = $getAllTechnicianUsers();
         return response()->json($result);
     }
 }

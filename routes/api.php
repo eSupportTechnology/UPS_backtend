@@ -61,6 +61,10 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     //Ticket
     Route::get('/all-tickets', [TicketController::class, 'getAllTickets']);
+    Route::post('/assign-ticket', [TicketController::class, 'assignTicket']);
+
+    //Technician Users
+    Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
 
 
 });
@@ -74,7 +78,12 @@ Route::middleware('operator')->prefix('operator')->group(function () {
 });
 
 // Technician routes
-Route::middleware('technician')->prefix('technician')->group(function () {
+Route::middleware('technician')->group(function () {
+
+    //Ticket
+    Route::post('/accept-ticket', [TicketController::class, 'acceptTicket']);
+    Route::post('/complete-ticket', [TicketController::class, 'completeTicket']);
+
 });
 
 // Customer routes
