@@ -70,11 +70,11 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 });
 
 // Admin routes
-Route::middleware('admin')->prefix('admin')->group(function () {
+Route::middleware('admin')->group(function () {
 });
 
 // Operator routes
-Route::middleware('operator')->prefix('operator')->group(function () {
+Route::middleware('operator')->group(function () {
 });
 
 // Technician routes
@@ -83,6 +83,7 @@ Route::middleware('technician')->group(function () {
     //Ticket
     Route::post('/accept-ticket', [TicketController::class, 'acceptTicket']);
     Route::post('/complete-ticket', [TicketController::class, 'completeTicket']);
+    Route::get('/tickets/assigned/{assigned_to}', [TicketController::class, 'getTicketsByAssignedTo']);
 
 });
 
