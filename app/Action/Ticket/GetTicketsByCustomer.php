@@ -37,7 +37,10 @@ class GetTicketsByCustomer
             $sortBy = $filters['sort_by'] ?? 'created_at';
             $sortDirection = $filters['sort_direction'] ?? 'desc';
 
-            $query->orderBy($sortBy, $sortDirection);
+            $sortByColumn = $sortBy === 'created_at' ? 'tickets.created_at' : 'tickets.' . $sortBy;
+
+            $query->orderBy($sortByColumn, $sortDirection);
+
             if ($sortBy !== 'id') {
                 $query->orderBy('tickets.id', 'desc');
             }
