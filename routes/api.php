@@ -93,5 +93,6 @@ Route::middleware(['auth:sanctum', 'customer'])->group(function () {
     //Ticket
     Route::post('/create-ticket', [TicketController::class, 'createTicket']);
     Route::get('/tickets-customer/{customer_id}', [TicketController::class, 'getTicketsByCustomer']);
+    Route::get('/tickets/{id}', [TicketController::class, 'getTicketById']);
 
 });

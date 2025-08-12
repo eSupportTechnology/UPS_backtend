@@ -11,40 +11,64 @@ class GetTicketsByCustomer
     public function __invoke(array $filters = []): array
     {
         try {
+            
             $query = Ticket::select([
-                'tickets.id',
-                'tickets.customer_id',
-                'tickets.title',
-                'tickets.description',
-                'tickets.photo_paths',
-                'tickets.status',
-                'tickets.priority',
-                'tickets.assigned_to',
-                'tickets.accepted_at',
-                'tickets.completed_at',
-            ])
-                ->leftJoin('users', 'tickets.assigned_to', '=', 'users.id')
-                ->addSelect([
-                    'users.name as technician_name',
-                    'users.email as technician_email',
-                    'users.phone as technician_phone',
-                    'users.address as technician_address',
-                ]);
-            $query->where('tickets.customer_id', $filters['customer_id']);
+                'id',
+                'customer_id',
+                'title',
+                'description',
+                'photo_paths',
+                'status',
+                'priority',
+                'assigned_to',
+                'accepted_at',
+                'completed_at',
+                'created_at',
+                'updated_at',
+            ]);
+            $query->where('customer_id', $filters['customer_id']);
+
+            // Apply search filter
+            if (!empty($filters['search'])) {
+                $search = $filters['search'];
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'LIKE', '%' . $search . '%')
+                      ->orWhere('description', 'LIKE', '%' . $search . '%')
+                      ->orWhere('id', 'LIKE', '%' . $search . '%');
+                });
+            }
+
+            // Apply status filter
+            if (!empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
 
             $perPage = $filters['per_page'] ?? 10;
 
             $sortBy = $filters['sort_by'] ?? 'created_at';
             $sortDirection = $filters['sort_direction'] ?? 'desc';
 
+            
             $query->orderBy($sortBy, $sortDirection);
             if ($sortBy !== 'id') {
-                $query->orderBy('tickets.id', 'desc');
+                $query->orderBy('id', 'desc');
             }
 
             $tickets = $query->paginate($perPage);
 
-            return CommonResponse::sendSuccessResponseWithData('tickets', $tickets);
+            return [
+                'status' => 200,
+                'message' => 'Tickets retrieved successfully',
+                'data' => [
+                    'tickets' => $tickets->items(),
+                    'pagination' => [
+                        'current_page' => $tickets->currentPage(),
+                        'per_page' => $tickets->perPage(),
+                        'total' => $tickets->total(),
+                        'last_page' => $tickets->lastPage(),
+                    ]
+                ]
+            ];
         } catch (\Exception $e) {
             Log::error('Failed to fetch tickets by customer: ' . $e->getMessage(), [
                 'filters' => $filters,

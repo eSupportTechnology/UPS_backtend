@@ -22,9 +22,10 @@ class TicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => 'required|exists:users,id',
+            'customer_id' => 'required|integer|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'priority' => 'sometimes|string|in:low,medium,high,urgent',
             'photos' => 'nullable|array',
             'photos.*' => 'file|image|max:5120',
         ];

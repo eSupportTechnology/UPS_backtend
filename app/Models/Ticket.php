@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Ticket extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $table = 'tickets';
-    public $incrementing = false;
 
     protected $fillable = [
         'customer_id',
@@ -23,5 +21,9 @@ class Ticket extends Model
         'assigned_to',
         'accepted_at',
         'completed_at',
+    ];
+
+    protected $casts = [
+        'photo_paths' => 'array',
     ];
 }

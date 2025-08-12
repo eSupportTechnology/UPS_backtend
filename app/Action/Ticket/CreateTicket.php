@@ -14,12 +14,25 @@ class CreateTicket
         DB::beginTransaction();
 
         try {
+            
+            if (!isset($data['priority'])) {
+                $data['priority'] = 'medium';
+            }
+
             if (isset($data['photos']) && is_array($data['photos'])) {
                 $paths = [];
                 foreach ($data['photos'] as $photo) {
-                    $paths[] = $photo->store('tickets', 'public');
+                    if ($photo->isValid()) {
+                        $path = $photo->store('tickets', 'public');
+                        if ($path) {
+                            $paths[] = $path;
+                        }
+                    }
                 }
-                $data['photo_paths'] = $paths;
+                
+                if (!empty($paths)) {
+                    $data['photo_paths'] = $paths;
+                }
 
                 unset($data['photos']);
             }

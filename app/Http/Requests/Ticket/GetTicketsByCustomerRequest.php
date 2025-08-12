@@ -22,11 +22,13 @@ class GetTicketsByCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['required', 'uuid', 'exists:users,id'],
+            'customer_id' => ['required', 'integer', 'exists:users,id'],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'sort_by' => ['sometimes', 'string', 'in:created_at,status,priority,accepted_at,completed_at'],
             'sort_direction' => ['sometimes', 'string', 'in:asc,desc'],
+            'search' => ['sometimes', 'string', 'max:255'],
+            'status' => ['sometimes', 'string', 'in:open,in-progress,resolved,closed'],
         ];
     }
 

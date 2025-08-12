@@ -9,6 +9,7 @@ use App\Action\Ticket\CreateTicket;
 use App\Action\Ticket\GetAllTickets;
 use App\Action\Ticket\GetTicketsByAssignedTo;
 use App\Action\Ticket\GetTicketsByCustomer;
+use App\Action\Ticket\GetTicketById;
 use App\Http\Requests\Ticket\AcceptTicketRequest;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CompleteTicketRequest;
@@ -60,6 +61,12 @@ class TicketController extends Controller
         GetTicketsByAssignedTo $getTicketsByAssignedTo
     ): JsonResponse {
         $result = $getTicketsByAssignedTo($assigned_to, $request->validated());
+        return response()->json($result);
+    }
+
+    public function getTicketById(int $id, GetTicketById $getTicketById): JsonResponse
+    {
+        $result = $getTicketById($id);
         return response()->json($result);
     }
 
