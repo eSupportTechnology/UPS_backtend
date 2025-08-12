@@ -12,8 +12,7 @@ class GetAllTickets
     public function __invoke(array $filters = []): array
     {
         try {
-            $query = Ticket::with('assignedTechnician')
-            ->select([
+            $query = Ticket::select([
                 'tickets.id',
                 'tickets.customer_id',
                 'tickets.title',
@@ -24,13 +23,18 @@ class GetAllTickets
                 'tickets.assigned_to',
                 'tickets.accepted_at',
                 'tickets.completed_at',
+                'tickets.created_at',
             ])
                 ->join('users', 'tickets.customer_id', '=', 'users.id')
+                ->leftJoin('users as technicians', 'tickets.assigned_to', '=', 'technicians.id')
                 ->addSelect([
                     'users.name as customer_name',
                     'users.email as customer_email',
                     'users.phone as customer_phone',
                     'users.address as customer_address',
+                    'technicians.name as technician_name',
+                    'technicians.email as technician_email',
+                    'technicians.phone as technician_phone',
                 ]);
 
             $this->applyFilters($query, $filters);
@@ -78,7 +82,17 @@ class GetAllTickets
         $sortBy = $filters['sort_by'] ?? 'created_at';
         $sortDirection = $filters['sort_direction'] ?? 'desc';
 
-        $query->orderBy($sortBy, $sortDirection);
+        $sortableColumns = [
+            'created_at' => 'tickets.created_at',
+            'status' => 'tickets.status',
+            'priority' => 'tickets.priority',
+            'accepted_at' => 'tickets.accepted_at',
+            'completed_at' => 'tickets.completed_at',
+        ];
+
+        $qualifiedSortBy = $sortableColumns[$sortBy] ?? 'tickets.created_at';
+
+        $query->orderBy($qualifiedSortBy, $sortDirection);
 
         if ($sortBy !== 'id') {
             $query->orderBy('tickets.id', 'desc');
