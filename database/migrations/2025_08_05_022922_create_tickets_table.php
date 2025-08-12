@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('customer_id');
+            $table->string('customer_id');
             $table->string('title');
             $table->text('description');
             $table->json('photo_paths')->nullable();

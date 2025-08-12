@@ -19,7 +19,7 @@ class CreateTicket
                 foreach ($data['photos'] as $photo) {
                     $paths[] = $photo->store('tickets', 'public');
                 }
-                $data['photo_paths'] = $paths;
+                $data['photo_paths'] = json_encode($paths);
 
                 unset($data['photos']);
             }
