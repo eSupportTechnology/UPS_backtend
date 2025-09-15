@@ -21,6 +21,9 @@ class GetAllTickets
                 'tickets.status',
                 'tickets.priority',
                 'tickets.assigned_to',
+                'tickets.district',
+                'tickets.city',
+                'tickets.gramsewa_division',
                 'tickets.accepted_at',
                 'tickets.completed_at',
                 'tickets.created_at',
@@ -60,7 +63,10 @@ class GetAllTickets
             $search = trim($filters['search']);
             $query->where(function($q) use ($search) {
                 $q->where('tickets.title', 'LIKE', "%{$search}%")
-                    ->orWhere('tickets.description', 'LIKE', "%{$search}%");
+                    ->orWhere('tickets.description', 'LIKE', "%{$search}%")
+                    ->orWhere('tickets.district', 'LIKE', "%{$search}%")
+                    ->orWhere('tickets.city', 'LIKE', "%{$search}%")
+                    ->orWhere('tickets.gramsewa_division', 'LIKE', "%{$search}%");
             });
         }
 
@@ -75,6 +81,18 @@ class GetAllTickets
         if (!empty($filters['assigned_to'])) {
             $query->where('tickets.assigned_to', $filters['assigned_to']);
         }
+
+        if (!empty($filters['district'])) {
+            $query->where('tickets.district', $filters['district']);
+        }
+
+        if (!empty($filters['city'])) {
+            $query->where('tickets.city', $filters['city']);
+        }
+
+        if (!empty($filters['gramsewa_division'])) {
+            $query->where('tickets.gramsewa_division', $filters['gramsewa_division']);
+        }
     }
 
     private function applySorting(Builder $query, array $filters): void
@@ -88,6 +106,9 @@ class GetAllTickets
             'priority' => 'tickets.priority',
             'accepted_at' => 'tickets.accepted_at',
             'completed_at' => 'tickets.completed_at',
+            'district' => 'tickets.district',
+            'city' => 'tickets.city',
+            'gramsewa_division' => 'tickets.gramsewa_division',
         ];
 
         $qualifiedSortBy = $sortableColumns[$sortBy] ?? 'tickets.created_at';
