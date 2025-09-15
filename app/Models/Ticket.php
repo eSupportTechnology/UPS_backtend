@@ -23,5 +23,8 @@ class Ticket extends Model
         'assigned_to',
         'accepted_at',
         'completed_at',
+        'district',
+        'city',
+        'gramsewa_division',
     ];
 }

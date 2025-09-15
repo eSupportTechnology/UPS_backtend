@@ -25,6 +25,9 @@ class TicketRequest extends FormRequest
             'customer_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'district' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'gramsewa_division' => 'nullable|string|max:255',
             'photos' => 'nullable|array',
             'photos.*' => 'file|image|max:5120',
         ];
