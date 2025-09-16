@@ -78,7 +78,7 @@ Route::middleware('operator')->group(function () {
 });
 
 // Technician routes
-Route::middleware('technician')->group(function () {
+Route::middleware(['auth:sanctum', 'technician'])->group(function () {
 
     //Ticket
     Route::post('/accept-ticket', [TicketController::class, 'acceptTicket']);

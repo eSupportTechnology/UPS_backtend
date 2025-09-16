@@ -27,4 +27,8 @@ class Ticket extends Model
         'city',
         'gramsewa_division',
     ];
+    public function assignedTechnician()
+    {
+        return $this->belongsTo(User::class, 'assigned_to', 'id');
+    }
 }
