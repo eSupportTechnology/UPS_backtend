@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AMCContractController;
+use App\Http\Controllers\AMCMaintenanceController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\TicketController;
@@ -66,7 +67,7 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     //Technician Users
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
 
-
+    Route::post('/assign-maintenance', [AMCMaintenanceController::class, 'assignMaintenance']);
 });
 
 // Admin routes

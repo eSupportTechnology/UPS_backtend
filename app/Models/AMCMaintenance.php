@@ -17,6 +17,7 @@ class AMCMaintenance extends Model
         'amc_contract_id',
         'scheduled_date',
         'completed_date',
+        'assigned_to',
         'note',
         'status',
     ];
