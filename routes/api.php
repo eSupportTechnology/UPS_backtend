@@ -5,6 +5,7 @@ use App\Http\Controllers\AMCMaintenanceController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TrackController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -68,6 +69,12 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
 
     Route::post('/assign-maintenance', [AMCMaintenanceController::class, 'assignMaintenance']);
+
+    Route::get('/tracks/{track}', [TrackController::class, 'show']);
+    Route::get('/jobs/{job}/track', [TrackController::class, 'showByJob']);
+
+    Route::get('/jobs', [TrackController::class, 'index']);
+
 });
 
 // Admin routes
@@ -85,6 +92,10 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::post('/accept-ticket', [TicketController::class, 'acceptTicket']);
     Route::post('/complete-ticket', [TicketController::class, 'completeTicket']);
     Route::get('/tickets/assigned/{assigned_to}', [TicketController::class, 'getTicketsByAssignedTo']);
+
+    Route::post('/tracks/start', [TrackController::class, 'start']);
+    Route::post('/tracks/{track}/points', [TrackController::class, 'storePoints']);
+    Route::post('/tracks/{track}/end', [TrackController::class, 'end']);
 
 });
 
