@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->date('scheduled_date');
             $table->date('completed_date')->nullable();
             $table->text('note')->nullable();
-            $table->enum('status', ['pending', 'completed', 'missed'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'missed','assigned'])->default('pending');
             $table->timestamps();
         });
     }

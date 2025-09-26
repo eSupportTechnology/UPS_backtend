@@ -27,4 +27,9 @@ class AMCMaintenance extends Model
         return $this->belongsTo(AMCContract::class, 'amc_contract_id', 'id');
     }
 
+    public function assignedTechnician()
+    {
+        return $this->belongsTo(User::class, 'assigned_to', 'id');
+    }
+
 }
