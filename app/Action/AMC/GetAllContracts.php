@@ -12,7 +12,7 @@ class GetAllContracts
     public function __invoke(array $filters = []): array
     {
         try {
-            $query = AMCContract::with(['maintenances', 'branch', 'customer'])
+            $query = AMCContract::with(['maintenances.assignedTechnician', 'branch', 'customer'])
                 ->select([
                     'id',
                     'branch_id',
