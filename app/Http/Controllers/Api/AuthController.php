@@ -72,8 +72,6 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            $user->tokens()->delete();
-
             $token = $user->createToken(
                 'maintenance_system_token',
                 $this->getTokenAbilities($user->role_as),
