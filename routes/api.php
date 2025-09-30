@@ -73,7 +73,7 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/tracks/{track}', [TrackController::class, 'show']);
     Route::get('/jobs/{job}/track', [TrackController::class, 'showByJob']);
 
-    Route::get('/jobs', [TrackController::class, 'index']);
+    Route::get('/jobs', [TrackController::class, 'allJobs']);
 
 });
 
@@ -96,6 +96,8 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::post('/tracks/start', [TrackController::class, 'start']);
     Route::post('/tracks/{track}/points', [TrackController::class, 'storePoints']);
     Route::post('/tracks/{track}/end', [TrackController::class, 'end']);
+
+    Route::get('/shop-inventories-all', [ShopInventoryController::class, 'getAllShopInventoriesRaw']);
 
 });
 

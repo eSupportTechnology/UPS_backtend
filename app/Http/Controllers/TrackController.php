@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\Track;
 use App\Events\TechnicianLocationUpdated;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TrackController extends Controller
 {
-    public function start(Request $request)
+    public function start(Request $request): JsonResponse
     {
         $track = Track::create([
             'technician_id' => $request->user()->id,
@@ -19,7 +20,7 @@ class TrackController extends Controller
         return response()->json($track, 201);
     }
 
-    public function storePoints(Request $request, Track $track)
+    public function storePoints(Request $request, Track $track): JsonResponse
     {
         $validated = $request->validate([
             'points' => 'required|array|min:1',
@@ -40,14 +41,14 @@ class TrackController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    public function end(Track $track)
+    public function end(Track $track): JsonResponse
     {
         $track->update(['ended_at' => now()]);
         return response()->json($track);
     }
 
 
-    public function show(Track $track)
+    public function show(Track $track): JsonResponse
     {
         $points = $track->points()->orderBy('recorded_at')->get();
 
@@ -63,7 +64,7 @@ class TrackController extends Controller
         ]);
     }
 
-    public function showByJob($jobId)
+    public function showByJob($jobId): JsonResponse
     {
         $track = Track::where('job_id', $jobId)->with('points')->first();
 
@@ -74,14 +75,19 @@ class TrackController extends Controller
         return response()->json($track);
     }
 
-    public function index()
+    public function allJobs(): JsonResponse
     {
-        $jobs = Ticket::with([
-            'assignedTechnician:id,name,email',
-            'track.points' => function ($q) {
-                $q->orderBy('recorded_at', 'asc');
-            }
-        ])->get();
+        $jobs = Ticket::whereHas('track', function ($q) {
+            $q->whereNotNull('created_at')
+            ->whereNull('ended_at');
+        })
+            ->with([
+                'assignedTechnician:id,name,email',
+                'track.points' => function ($q) {
+                    $q->orderBy('recorded_at', 'asc');
+                }
+            ])
+            ->get();
 
         return response()->json($jobs);
     }
