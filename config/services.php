@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'sms' => [
+        'notify_lk' => [
+            'user_id'   => env('SMS_NOTIFY_LK_USER_ID'),
+            'api_key'   => env('SMS_NOTIFY_LK_API_KEY'),
+            'api_url'   => env('SMS_NOTIFY_LK_API_URL', 'https://app.notify.lk/api/v1/send'),
+            'sender_id' => env('SMS_NOTIFY_LK_SENDER_ID', 'NotifyDEMO'),
+        ],
+    ],
+
 ];
