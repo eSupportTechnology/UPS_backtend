@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Action\Inventory\CreateInventory;
 use App\Action\Inventory\DeleteInventory;
 use App\Action\Inventory\GetAllInventories;
+use App\Action\Inventory\GetAllInventoriesRaw;
 use App\Action\Inventory\UpdateInventory;
 use App\Http\Requests\Inventory\GetAllInventoriesRequest;
 use App\Http\Requests\Inventory\ShopInventoryRequest;
@@ -32,6 +33,13 @@ class ShopInventoryController extends Controller
     public function deleteShopInventories(string $id, DeleteInventory $deleteInventory): JsonResponse
     {
         return response()->json($deleteInventory($id));
+    }
+
+    public function getAllShopInventoriesRaw(GetAllInventoriesRaw $getAllInventoriesRaw): JsonResponse
+    {
+        $result = $getAllInventoriesRaw();
+
+        return response()->json($result);
     }
 }
 

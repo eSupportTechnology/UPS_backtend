@@ -17,17 +17,17 @@ class ShopInventoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'created_by' => $this->faker->name,
-            'product_name' => $this->faker->word,
-            'brand' => $this->faker->company,
-            'model' => $this->faker->bothify('Model-###'),
-            'serial_number' => $this->faker->unique()->bothify('SN-#####'),
-            'category' => $this->faker->randomElement(['Battery', 'UPS', 'Inverter', 'Stabilizer']),
-            'description' => $this->faker->sentence,
-            'quantity' => $this->faker->numberBetween(1, 100),
-            'unit_price' => $this->faker->randomFloat(2, 100, 10000),
+            'created_by'    => $this->faker->uuid(),
+            'product_name'  => $this->faker->words(2, true),
+            'brand'         => $this->faker->company(),
+            'model'         => strtoupper($this->faker->bothify('??###')),
+            'serial_number' => strtoupper($this->faker->bothify('SN-#####')),
+            'category'      => $this->faker->randomElement(['Electronics', 'Furniture', 'Appliances', 'Tools']),
+            'description'   => $this->faker->sentence(),
+            'quantity'      => $this->faker->numberBetween(1, 100),
+            'unit_price'    => $this->faker->randomFloat(2, 10, 1000),
             'purchase_date' => $this->faker->date(),
-            'warranty' => $this->faker->randomElement(['6 months', '1 year', '2 years']),
+            'warranty'      => $this->faker->randomElement(['6 months', '1 year', '2 years', '3 years']),
         ];
     }
 }
