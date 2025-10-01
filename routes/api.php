@@ -101,6 +101,8 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::get('/shop-inventories-all', [ShopInventoryController::class, 'getAllShopInventoriesRaw']);
 
     Route::post('/inventory-usages', [InventoryItemUsageController::class, 'createUsage']);
+    Route::post('/inventory-returns', [InventoryItemUsageController::class, 'returnItems']);
+
 
 
 });
