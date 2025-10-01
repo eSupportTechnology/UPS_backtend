@@ -3,6 +3,7 @@
 use App\Http\Controllers\AMCContractController;
 use App\Http\Controllers\AMCMaintenanceController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\InventoryItemUsageController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TrackController;
@@ -98,6 +99,9 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::post('/tracks/{track}/end', [TrackController::class, 'end']);
 
     Route::get('/shop-inventories-all', [ShopInventoryController::class, 'getAllShopInventoriesRaw']);
+
+    Route::post('/inventory-usages', [InventoryItemUsageController::class, 'createUsage']);
+
 
 });
 
