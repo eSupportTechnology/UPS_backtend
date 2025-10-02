@@ -3,13 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TrackPoint extends Model
 {
-    use HasFactory, HasUuids;
-
     protected $fillable = [
         'track_id',
         'lat',
@@ -18,13 +15,20 @@ class TrackPoint extends Model
         'speed',
         'heading',
         'battery',
-        'recorded_at'
+        'recorded_at',
     ];
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $casts = [
+        'lat' => 'float',
+        'lng' => 'float',
+        'accuracy' => 'float',
+        'speed' => 'float',
+        'heading' => 'float',
+        'battery' => 'integer',
+        'recorded_at' => 'datetime',
+    ];
 
-    public function track()
+    public function track(): BelongsTo
     {
         return $this->belongsTo(Track::class);
     }

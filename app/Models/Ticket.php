@@ -31,9 +31,10 @@ class Ticket extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to', 'id');
     }
+
     public function track()
     {
-        return $this->hasOne(Track::class, 'job_id', 'id');
+        return $this->hasOne(Track::class, 'job_id');
     }
 
 }
