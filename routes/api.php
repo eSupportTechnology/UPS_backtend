@@ -73,7 +73,6 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     Route::get('/tracks/{track}', [TrackController::class, 'show']);
     Route::get('/jobs/{job}/track', [TrackController::class, 'showByJob']);
-    Route::post('/tracks/test-broadcast', [TrackController::class, 'testBroadcast']);
 
     Route::get('/jobs', [TrackController::class, 'allJobs']);
 
