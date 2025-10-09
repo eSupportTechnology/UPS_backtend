@@ -219,40 +219,4 @@ class TrackController extends Controller
             return response()->json(['message' => 'Failed to fetch jobs'], 500);
         }
     }
-
-    public function testBroadcast(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'technician_id' => 'required|string',
-                'job_id' => 'required|string',
-                'lat' => 'required|numeric|between:-90,90',
-                'lng' => 'required|numeric|between:-180,180',
-            ]);
-
-            $point = [
-                'lat' => $validated['lat'],
-                'lng' => $validated['lng'],
-                'recorded_at' => now()->toIso8601String(),
-                'speed' => rand(0, 60),
-                'battery' => rand(50, 100),
-                'accuracy' => rand(5, 20),
-            ];
-
-            broadcast(new TechnicianLocationUpdated(
-                $validated['technician_id'],
-                $validated['job_id'],
-                [$point]
-            ));
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Test broadcast sent',
-                'point' => $point
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Test broadcast failed', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Test broadcast failed'], 500);
-        }
-    }
 }
