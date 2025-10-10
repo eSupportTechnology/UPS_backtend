@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml, curl, gd
+          coverage: none
+
+      - name: Install Composer deps
+        run: composer install --prefer-dist --no-interaction
+
+      - name: Lint (optional)
+        run: |
+          if [ -f vendor/bin/pint ]; then
+            vendor/bin/pint --test
+          else
+            echo "Laravel Pint not found; skipping."
+          fi
+
+      - name: Run PHPUnit
+        run: |
+          if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ]; then
+            vendor/bin/phpunit --testdox
+          else
+            echo "No phpunit config found; skipping tests."
+          fi
+
+      - name: Build frontend assets (if needed)
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm run build
+          else
+            echo "No package.json found; skipping frontend build."
+          fi

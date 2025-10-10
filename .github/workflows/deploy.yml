@@ -1,0 +1,151 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [closed]
+    branches: ["main"]
+  workflow_dispatch: # Allow manual deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Only run on push to main or when PR is merged to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml, curl, gd
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction
+
+      - name: Run PHPUnit tests
+        run: |
+          if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ]; then
+            vendor/bin/phpunit --testdox
+          else
+            echo "No phpunit config found; skipping tests."
+          fi
+
+      - name: Build frontend assets (if needed)
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm run build
+          else
+            echo "No package.json found; skipping frontend build."
+          fi
+
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          COMPOSER_PATH: ${{ secrets.COMPOSER_PATH || 'composer' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            set -e
+            echo 'Starting deployment...'
+
+            # Navigate to project directory
+            cd $DEPLOY_PATH || { echo 'Deploy path not found'; exit 1; }
+
+            # Pull latest changes
+            echo 'Pulling latest changes...'
+            git pull origin main
+
+            # Install/update Composer dependencies
+            echo 'Installing Composer dependencies...'
+            $COMPOSER_PATH install --no-dev --optimize-autoloader
+
+            # Advanced migration handling
+            echo 'Checking migration status...'
+
+            # Check if migrations table exists
+            if php artisan migrate:status > /dev/null 2>&1; then
+              echo 'Migrations table exists. Analyzing migration status...'
+
+              # Get detailed migration status
+              MIGRATION_STATUS=\$(php artisan migrate:status)
+              PENDING_COUNT=\$(echo \"\$MIGRATION_STATUS\" | grep 'Pending' | wc -l)
+              RAN_COUNT=\$(echo \"\$MIGRATION_STATUS\" | grep 'Ran' | wc -l)
+
+              echo \"Found \$RAN_COUNT ran migrations and \$PENDING_COUNT pending migrations.\"
+
+              if [ \"\$PENDING_COUNT\" -gt 0 ]; then
+                echo 'Pending migrations:'
+                echo \"\$MIGRATION_STATUS\" | grep 'Pending'
+                echo 'Running pending migrations...'
+                php artisan migrate --force
+                echo 'Migrations completed successfully.'
+              else
+                echo 'No pending migrations found. Database is up to date.'
+              fi
+            else
+              echo 'Migrations table does not exist. This appears to be a fresh installation.'
+              echo 'Running all migrations...'
+              php artisan migrate --force
+              echo 'Initial migrations completed successfully.'
+            fi
+
+            # Run Laravel deployment commands
+            echo 'Running Laravel deployment commands...'
+            php artisan storage:link || true
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Set proper permissions
+            echo 'Setting permissions...'
+            chmod -R 775 storage bootstrap/cache || true
+            chown -R $SSH_USER:$SSH_USER storage bootstrap/cache || true
+
+            echo 'Deployment completed successfully!'
+          "
+
+      - name: Verify deployment
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            cd $DEPLOY_PATH
+            echo 'Checking Laravel application status...'
+            php artisan --version
+            php artisan config:show app.name
+            echo 'Migration status:'
+            php artisan migrate:status | head -10
+            echo 'Deployment verification completed!'
+          "
+
+      - name: Deployment Summary
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📊 Triggered by: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "🔀 Merged PR: ${{ github.event.pull_request.title }}"
+            echo "👤 Merged by: ${{ github.event.pull_request.merged_by.login }}"
+          else
+            echo "👤 Pushed by: ${{ github.actor }}"
+          fi
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "🌐 Application URL: https://testups.esupportsystem.shop"
