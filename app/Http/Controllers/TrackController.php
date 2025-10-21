@@ -13,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class TrackController extends Controller
 {
-
     public function start(Request $request): JsonResponse
     {
         try {
@@ -21,35 +20,70 @@ class TrackController extends Controller
                 'job_id' => 'required|exists:tickets,id',
             ]);
 
-            $existingTrack = Track::where('job_id', $validated['job_id'])
-                ->whereNull('ended_at')
-                ->first();
+            $track = DB::transaction(function () use ($validated, $request) {
+                $existingTrack = Track::where('job_id', $validated['job_id'])
+                    ->whereNull('ended_at')
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($existingTrack) {
-                return response()->json([
-                    'message' => 'Track already exists for this job',
-                    'track' => $existingTrack->load('points')
-                ], 200);
-            }
+                if ($existingTrack) {
+                    return $existingTrack;
+                }
 
-            $track = Track::create([
-                'technician_id' => $request->user()->id,
-                'job_id' => $validated['job_id'],
-                'started_at' => now(),
+                return Track::create([
+                    'technician_id' => $request->user()->id,
+                    'job_id' => $validated['job_id'],
+                    'started_at' => now(),
+                ]);
+            });
+
+            Log::info('Track started', [
+                'track_id' => $track->id,
+                'job_id' => $track->job_id,
+                'technician_id' => $track->technician_id
             ]);
 
-            Log::info('Track started', ['track_id' => $track->id, 'job_id' => $track->job_id]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Track started successfully',
+                'track' => $track->load('points')
+            ], $track->wasRecentlyCreated ? 201 : 200);
 
-            return response()->json($track, 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('Failed to start track', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Failed to start tracking'], 500);
+            Log::error('Failed to start track', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to start tracking'
+            ], 500);
         }
     }
 
     public function storePoints(Request $request, Track $track): JsonResponse
     {
         try {
+            if ($track->technician_id !== $request->user()->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            if ($track->ended_at) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Track has already ended'
+                ], 400);
+            }
+
             $validated = $request->validate([
                 'points' => 'required|array|min:1',
                 'points.*.lat' => 'required|numeric|between:-90,90',
@@ -72,13 +106,24 @@ class TrackController extends Controller
             });
 
             if (!empty($savedPoints)) {
-                $pointsArray = array_map(fn($p) => $p->toArray(), $savedPoints);
+                $pointsArray = array_map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'lat' => (float) $p->lat,
+                        'lng' => (float) $p->lng,
+                        'accuracy' => $p->accuracy,
+                        'speed' => $p->speed,
+                        'heading' => $p->heading,
+                        'battery' => $p->battery,
+                        'recorded_at' => $p->recorded_at->toIso8601String(),
+                    ];
+                }, $savedPoints);
 
                 broadcast(new TechnicianLocationUpdated(
                     $track->technician_id,
                     $track->job_id,
                     $pointsArray
-                ))->toOthers();
+                ));
 
                 Log::info('Location broadcast sent', [
                     'track_id' => $track->id,
@@ -97,24 +142,47 @@ class TrackController extends Controller
 
         } catch (ValidationException $e) {
             return response()->json([
+                'status' => 'error',
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             Log::error('Failed to store points', [
                 'track_id' => $track->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return response()->json(['message' => 'Failed to save tracking points'], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to save tracking points'
+            ], 500);
         }
     }
 
-    public function end(Track $track): JsonResponse
+    public function end(Request $request, Track $track): JsonResponse
     {
         try {
+            if ($track->technician_id !== $request->user()->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            if ($track->ended_at) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Track has already ended',
+                    'track' => $track->load('points')
+                ], 400);
+            }
+
             $track->update(['ended_at' => now()]);
 
-            Log::info('Track ended', ['track_id' => $track->id]);
+            Log::info('Track ended', [
+                'track_id' => $track->id,
+                'duration' => $track->started_at->diffInSeconds($track->ended_at)
+            ]);
 
             return response()->json([
                 'status' => 'success',
@@ -126,7 +194,10 @@ class TrackController extends Controller
                 'track_id' => $track->id,
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['message' => 'Failed to end tracking'], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to end tracking'
+            ], 500);
         }
     }
 
@@ -148,19 +219,25 @@ class TrackController extends Controller
                 ]);
 
             return response()->json([
-                'id' => $track->id,
-                'technician_id' => $track->technician_id,
-                'job_id' => $track->job_id,
-                'started_at' => $track->started_at,
-                'ended_at' => $track->ended_at,
-                'points' => $points,
+                'status' => 'success',
+                'data' => [
+                    'id' => $track->id,
+                    'technician_id' => $track->technician_id,
+                    'job_id' => $track->job_id,
+                    'started_at' => $track->started_at,
+                    'ended_at' => $track->ended_at,
+                    'points' => $points,
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch track', [
                 'track_id' => $track->id,
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['message' => 'Failed to fetch track'], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch track'
+            ], 500);
         }
     }
 
@@ -175,17 +252,24 @@ class TrackController extends Controller
 
             if (!$track) {
                 return response()->json([
+                    'status' => 'error',
                     'message' => 'No track found for this job'
                 ], 404);
             }
 
-            return response()->json($track);
+            return response()->json([
+                'status' => 'success',
+                'data' => $track
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch track by job', [
                 'job_id' => $jobId,
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['message' => 'Failed to fetch track'], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch track'
+            ], 500);
         }
     }
 
@@ -193,7 +277,7 @@ class TrackController extends Controller
     {
         try {
             $jobs = Ticket::whereHas('track', function ($q) {
-                $q->whereNotNull('created_at')
+                $q->whereNotNull('started_at')
                     ->whereNull('ended_at');
             })
                 ->with([
@@ -213,10 +297,18 @@ class TrackController extends Controller
                     ];
                 });
 
-            return response()->json($jobs);
+            return response()->json([
+                'status' => 'success',
+                'data' => $jobs
+            ]);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch all jobs', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Failed to fetch jobs'], 500);
+            Log::error('Failed to fetch all jobs', [
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch jobs'
+            ], 500);
         }
     }
 }
