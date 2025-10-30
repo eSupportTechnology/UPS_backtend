@@ -71,12 +71,12 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
     Route::post('/assign-maintenance', [AMCMaintenanceController::class, 'assignMaintenance']);
 
-    Route::get('/tracks/{track}', [TrackController::class, 'show']);
-    Route::get('/jobs/{job}/track', [TrackController::class, 'showByJob']);
-
-    Route::get('/jobs', [TrackController::class, 'allJobs']);
-
+    Route::get('/tracks-active/{technician_id}', [TrackController::class, 'getActive']);
+    Route::get('tracks/{track_id}', [TrackController::class, 'show']);
+    Route::get('/tracks', [TrackController::class, 'index']);
 });
+
+
 
 // Admin routes
 Route::middleware('admin')->group(function () {
@@ -94,17 +94,14 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::post('/complete-ticket', [TicketController::class, 'completeTicket']);
     Route::get('/tickets/assigned/{assigned_to}', [TicketController::class, 'getTicketsByAssignedTo']);
 
-    Route::post('/tracks/start', [TrackController::class, 'start']);
-    Route::post('/tracks/{track}/points', [TrackController::class, 'storePoints']);
-    Route::post('/tracks/{track}/end', [TrackController::class, 'end']);
-
     Route::get('/shop-inventories-all', [ShopInventoryController::class, 'getAllShopInventoriesRaw']);
 
     Route::post('/inventory-usages', [InventoryItemUsageController::class, 'createUsage']);
     Route::post('/inventory-returns', [InventoryItemUsageController::class, 'returnItems']);
 
-
-
+    Route::post('/tracks-start', [TrackController::class, 'start']);
+    Route::post('/tracks-points', [TrackController::class, 'savePoints']);
+    Route::post('/{track_id}/stop', [TrackController::class, 'stop']);
 });
 
 // Customer routes
