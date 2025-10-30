@@ -16,7 +16,7 @@ class TrackController extends Controller
     public function start(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'technician_id' => 'required|uuid|exists:users,id',
+            'technician_id' => 'required|exists:users,id',
             'job_id' => 'nullable',
         ]);
 
