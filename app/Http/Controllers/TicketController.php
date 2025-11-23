@@ -9,6 +9,9 @@ use App\Action\Ticket\CreateTicket;
 use App\Action\Ticket\GetAllTickets;
 use App\Action\Ticket\GetTicketsByAssignedTo;
 use App\Action\Ticket\GetTicketsByCustomer;
+use App\Action\Ticket\ExportTicketsExcel;
+use App\Action\Ticket\ExportTicketsPdf;
+use App\Action\Ticket\GenerateTicketReport;
 use App\Http\Requests\Ticket\AcceptTicketRequest;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CompleteTicketRequest;
@@ -16,8 +19,10 @@ use App\Http\Requests\Ticket\GetAllTicketsRequest;
 use App\Http\Requests\Ticket\GetTicketsByAssignedToRequest;
 use App\Http\Requests\Ticket\GetTicketsByCustomerRequest;
 use App\Http\Requests\Ticket\TicketRequest;
+use App\Http\Requests\Ticket\TicketReportRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TicketController extends Controller
 {
@@ -63,4 +68,18 @@ class TicketController extends Controller
         return response()->json($result);
     }
 
+    public function exportExcel(TicketReportRequest $request, ExportTicketsExcel $action): BinaryFileResponse
+    {
+        return $action($request->validated());
+    }
+
+    public function exportPdf(TicketReportRequest $request, ExportTicketsPdf $action): Response
+    {
+        return $action($request->validated());
+    }
+
+    public function generateReport(TicketReportRequest $request, GenerateTicketReport $action): JsonResponse
+    {
+        return response()->json($action($request->validated()));
+    }
 }

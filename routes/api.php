@@ -43,6 +43,10 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::put('/update-shopInventories/{id}', [ShopInventoryController::class, 'updateShopInventories']);
     Route::delete('/delete-shopInventories/{id}', [ShopInventoryController::class, 'deleteShopInventories']);
 
+    Route::get('/shop-inventories/export/excel', [ShopInventoryController::class, 'exportExcel']);
+    Route::get('/shop-inventories/export/pdf', [ShopInventoryController::class, 'exportPdf']);
+    Route::get('/shop-inventories/report', [ShopInventoryController::class, 'generateReport']);
+
     // Branches
     Route::get('/all-branches', [BranchController::class, 'getAllBranches']);
     Route::post('/create-branch', [BranchController::class, 'createBranch']);
@@ -59,12 +63,20 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::put('/update-amc-contract/{id}', [AMCContractController::class, 'updateAMCContract']);
     Route::delete('/delete-amc-contract/{id}', [AMCContractController::class, 'deleteAMCContract']);
 
+    Route::get('/amc-contracts/export/excel', [AMCContractController::class, 'exportExcel']);
+    Route::get('/amc-contracts/export/pdf', [AMCContractController::class, 'exportPdf']);
+    Route::get('/amc-contracts/report', [AMCContractController::class, 'generateReport']);
+
     Route::post('/amc-contracts-activate/{id}', [AMCContractController::class, 'activateAMCContract']);
     Route::post('/amc-contracts-deactivate/{id}', [AMCContractController::class, 'deactivateAMCContract']);
 
     //Ticket
     Route::get('/all-tickets', [TicketController::class, 'getAllTickets']);
     Route::post('/assign-ticket', [TicketController::class, 'assignTicket']);
+
+    Route::get('/tickets/export/excel', [TicketController::class, 'exportExcel']);
+    Route::get('/tickets/export/pdf', [TicketController::class, 'exportPdf']);
+    Route::get('/tickets/report', [TicketController::class, 'generateReport']);
 
     //Technician Users
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
