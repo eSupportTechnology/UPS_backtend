@@ -14,6 +14,7 @@ class Track extends Model
     protected $fillable = [
         'technician_id',
         'job_id',
+        'type',
         'started_at',
         'ended_at',
     ];
@@ -33,8 +34,13 @@ class Track extends Model
         return $this->belongsTo(User::class, 'technician_id');
     }
 
-    public function job(): BelongsTo
+    public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class, 'job_id');
+    }
+
+    public function amcMaintenance(): BelongsTo
+    {
+        return $this->belongsTo(AMCMaintenance::class, 'job_id');
     }
 }

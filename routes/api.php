@@ -3,6 +3,7 @@
 use App\Http\Controllers\AMCContractController;
 use App\Http\Controllers\AMCMaintenanceController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryItemUsageController;
 use App\Http\Controllers\ShopInventoryController;
 use App\Http\Controllers\TicketController;
@@ -27,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Super Admin routes
 Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
+    Route::get('/dashboard/super-admin', [DashboardController::class, 'superAdminDashboard']);
+
     //Users
     Route::post('/create-user', [AuthController::class, 'createUserWithAutoPassword']);
     Route::get('/all-users', [UserController::class, 'getAllUsers']);
@@ -91,20 +94,25 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
 
 // Admin routes
-Route::middleware('admin')->group(function () {
+Route::middleware(['auth:sanctum','admin'])->group(function () {
+    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
 });
 
 // Operator routes
-Route::middleware('operator')->group(function () {
+Route::middleware(['auth:sanctum','operator'])->group(function () {
+    Route::get('/dashboard/operator', [DashboardController::class, 'operatorDashboard']);
 });
 
 // Technician routes
 Route::middleware(['auth:sanctum', 'technician'])->group(function () {
+    Route::get('/dashboard/technician', [DashboardController::class, 'technicianDashboard']);
 
     //Ticket
     Route::post('/accept-ticket', [TicketController::class, 'acceptTicket']);
     Route::post('/complete-ticket', [TicketController::class, 'completeTicket']);
     Route::get('/tickets/assigned/{assigned_to}', [TicketController::class, 'getTicketsByAssignedTo']);
+
+    Route::get('/amc-maintenances/assigned/{assigned_to}', [AMCMaintenanceController::class, 'getMaintenancesByAssignedTo']);
 
     Route::get('/shop-inventories-all', [ShopInventoryController::class, 'getAllShopInventoriesRaw']);
 

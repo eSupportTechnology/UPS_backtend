@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AMCMaintenance;
+use App\Models\Ticket;
 use App\Models\Track;
 use App\Models\TrackPoint;
 use Carbon\Carbon;
@@ -17,7 +19,8 @@ class TrackController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'technician_id' => 'required|exists:users,id',
-            'job_id' => 'nullable',
+            'job_id' => 'required|uuid',
+            'type' => 'required|in:ticket,amc_maintenance',
         ]);
 
         if ($validator->fails()) {
@@ -25,6 +28,24 @@ class TrackController extends Controller
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        if ($request->type === 'ticket') {
+            $exists = Ticket::where('id', $request->job_id)->exists();
+            if (!$exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ticket not found'
+                ], 404);
+            }
+        } elseif ($request->type === 'amc_maintenance') {
+            $exists = AMCMaintenance::where('id', $request->job_id)->exists();
+            if (!$exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'AMC Maintenance not found'
+                ], 404);
+            }
         }
 
         $activeTrack = Track::where('technician_id', $request->technician_id)
@@ -42,6 +63,7 @@ class TrackController extends Controller
         $track = Track::create([
             'technician_id' => $request->technician_id,
             'job_id' => $request->job_id,
+            'type' => $request->type,
             'started_at' => now(),
         ]);
 
@@ -158,7 +180,7 @@ class TrackController extends Controller
     {
         $track = Track::with(['points' => function($query) {
             $query->orderBy('recorded_at', 'asc');
-        }, 'technician:id,name,email', 'job:id,title'])
+        }, 'technician:id,name,email'])
             ->find($trackId);
 
         if (!$track) {
@@ -166,6 +188,12 @@ class TrackController extends Controller
                 'success' => false,
                 'message' => 'Track not found'
             ], 404);
+        }
+
+        if ($track->type === 'ticket') {
+            $track->load('ticket:id,title,status');
+        } elseif ($track->type === 'amc_maintenance') {
+            $track->load('amcMaintenance:id,scheduled_date,status,note');
         }
 
         $statistics = [
@@ -188,6 +216,7 @@ class TrackController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'technician_id' => 'required|uuid|exists:users,id',
+            'type' => 'nullable|in:ticket,amc_maintenance',
             'status' => 'nullable|in:active,completed',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date',
@@ -201,8 +230,11 @@ class TrackController extends Controller
         }
 
         $query = Track::where('technician_id', $request->technician_id)
-            ->with(['job:id,title'])
             ->withCount('points');
+
+        if ($request->type) {
+            $query->where('type', $request->type);
+        }
 
         if ($request->status === 'active') {
             $query->whereNull('ended_at');
@@ -217,7 +249,18 @@ class TrackController extends Controller
             $query->whereDate('started_at', '<=', $request->date_to);
         }
 
+        $query->with(['technician:id,name,email']);
+
         $tracks = $query->orderBy('started_at', 'desc')->paginate(20);
+
+        $tracks->getCollection()->transform(function ($track) {
+            if ($track->type === 'ticket') {
+                $track->load('ticket:id,title,status');
+            } elseif ($track->type === 'amc_maintenance') {
+                $track->load('amcMaintenance:id,scheduled_date,status,note');
+            }
+            return $track;
+        });
 
         return response()->json([
             'success' => true,

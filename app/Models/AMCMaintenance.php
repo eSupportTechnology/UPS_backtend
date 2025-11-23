@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AMCMaintenance extends Model
 {
-    use HasFactory, HasUuids;
+    use HasUuids;
 
     protected $table = 'amc_maintenances';
     public $incrementing = false;
@@ -30,6 +30,16 @@ class AMCMaintenance extends Model
     public function assignedTechnician()
     {
         return $this->belongsTo(User::class, 'assigned_to', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(User::class, 'customer_id', 'id');
+    }
+
+    public function maintenances()
+    {
+        return $this->hasMany(AMCMaintenance::class, 'amc_contract_id', 'id');
     }
 
 }
