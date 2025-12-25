@@ -23,6 +23,9 @@ class User extends Authenticatable
         'employment_type',
         'profile_image',
         'specialization',
+        'customer_type',
+        'company_name',
+        'company_headquarters_branch_id',
     ];
 
     protected $hidden = [
@@ -129,5 +132,31 @@ class User extends Authenticatable
             'part_time' => 'Part Time',
             default => 'N/A',
         };
+    }
+
+    // Customer Type Helpers
+    public function isPersonalCustomer(): bool
+    {
+        return $this->customer_type === 'personal';
+    }
+
+    public function isCompanyCustomer(): bool
+    {
+        return $this->customer_type === 'company';
+    }
+
+    public function getCustomerTypeLabel(): string
+    {
+        return match($this->customer_type) {
+            'personal' => 'Individual Customer',
+            'company' => 'Company Customer',
+            default => 'N/A',
+        };
+    }
+
+    // Relationships
+    public function branches()
+    {
+        return $this->hasMany(CompanyBranch::class, 'company_id');
     }
 }

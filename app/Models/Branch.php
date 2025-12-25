@@ -29,4 +29,22 @@ class Branch extends Model
         'operating_hours',
         'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    // Relationships
+    public function companyCustomers()
+    {
+        return $this->hasMany(CustomerCompanyBranch::class, 'branch_id');
+    }
+
+    public function customersAsHeadquarters()
+    {
+        return $this->hasMany(User::class, 'company_headquarters_branch_id');
+    }
 }

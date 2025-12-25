@@ -47,6 +47,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/technician/{id}', [UserController::class, 'updateTechnician']);
     Route::delete('/technician/{id}', [UserController::class, 'deleteTechnician']);
 
+    //Customers
+    Route::post('/create-customer', [UserController::class, 'createCustomer']);
+    Route::post('/customer/{customerId}/add-branches', [UserController::class, 'addCompanyCustomerBranches']);
+    Route::put('/customer/{customerId}/update-branch/{branchId}', [UserController::class, 'updateCompanyCustomerBranch']);
+    Route::delete('/customer/{customerId}/remove-branch/{branchId}', [UserController::class, 'removeCompanyCustomerBranch']);
+    Route::get('/customer/{customerId}/branches', [UserController::class, 'getCompanyCustomerBranches']);
+
     //ShopInventory
     Route::get('/all-shopInventories', [ShopInventoryController::class, 'getAllShopInventories']);
     Route::post('/create-shopInventories', [ShopInventoryController::class, 'createShopInventory']);
