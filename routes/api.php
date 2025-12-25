@@ -27,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Super Admin routes
-Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
+//Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/dashboard/super-admin', [DashboardController::class, 'superAdminDashboard']);
 
     //Users
@@ -39,6 +39,13 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::post('/users-activate/{id}', [UserController::class, 'activateUser']);
     Route::post('/users-deactivate/{id}', [UserController::class, 'deactivateUser']);
     Route::get('/active-customers', [UserController::class, 'getActiveCustomers']);
+
+    //Technicians
+    Route::post('/create-technician', [UserController::class, 'createTechnician']);
+    Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
+    Route::get('/technician/{id}', [UserController::class, 'getTechnician']);
+    Route::put('/technician/{id}', [UserController::class, 'updateTechnician']);
+    Route::delete('/technician/{id}', [UserController::class, 'deleteTechnician']);
 
     //ShopInventory
     Route::get('/all-shopInventories', [ShopInventoryController::class, 'getAllShopInventories']);
@@ -81,6 +88,17 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/tickets/export/pdf', [TicketController::class, 'exportPdf']);
     Route::get('/tickets/report', [TicketController::class, 'generateReport']);
 
+    // Inside Job Management
+    Route::post('/inside-jobs/create-direct', [TicketController::class, 'createInsideJobDirect']);
+    Route::post('/tickets/convert-to-inside-job', [TicketController::class, 'convertToInsideJob']);
+    Route::get('/inside-jobs', [TicketController::class, 'getInsideJobs']);
+    Route::get('/inside-jobs/{ticket_id}/job-card', [TicketController::class, 'getJobCard']);
+    Route::post('/inside-jobs/inspect', [TicketController::class, 'inspectInsideJob']);
+    Route::post('/inside-jobs/create-quote', [TicketController::class, 'createQuote']);
+    Route::post('/inside-jobs/approve-quote', [TicketController::class, 'approveQuote']);
+    Route::post('/inside-jobs/start-repair', [TicketController::class, 'startRepair']);
+    Route::post('/inside-jobs/complete', [TicketController::class, 'completeInsideJob']);
+
     //Technician Users
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
 
@@ -89,22 +107,22 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/tracks-active/{technician_id}', [TrackController::class, 'getActive']);
     Route::get('tracks/{track_id}', [TrackController::class, 'show']);
     Route::get('/tracks', [TrackController::class, 'index']);
-});
+//});
 
 
 
 // Admin routes
-Route::middleware(['auth:sanctum','admin'])->group(function () {
+//Route::middleware(['auth:sanctum','admin'])->group(function () {
     Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
-});
+//});
 
 // Operator routes
-Route::middleware(['auth:sanctum','operator'])->group(function () {
+//Route::middleware(['auth:sanctum','operator'])->group(function () {
     Route::get('/dashboard/operator', [DashboardController::class, 'operatorDashboard']);
-});
+//});
 
 // Technician routes
-Route::middleware(['auth:sanctum', 'technician'])->group(function () {
+//Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::get('/dashboard/technician', [DashboardController::class, 'technicianDashboard']);
 
     //Ticket
@@ -122,13 +140,13 @@ Route::middleware(['auth:sanctum', 'technician'])->group(function () {
     Route::post('/tracks-start', [TrackController::class, 'start']);
     Route::post('/tracks-points', [TrackController::class, 'savePoints']);
     Route::post('/{track_id}/stop', [TrackController::class, 'stop']);
-});
+//});
 
 // Customer routes
-Route::middleware(['auth:sanctum', 'customer'])->group(function () {
+//Route::middleware(['auth:sanctum', 'customer'])->group(function () {
 
     //Ticket
     Route::post('/create-ticket', [TicketController::class, 'createTicket']);
     Route::get('/tickets-customer/{customer_id}', [TicketController::class, 'getTicketsByCustomer']);
 
-});
+//});

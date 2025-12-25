@@ -19,6 +19,10 @@ class User extends Authenticatable
         'is_active',
         'phone',
         'address',
+        'technician_type',
+        'employment_type',
+        'profile_image',
+        'specialization',
     ];
 
     protected $hidden = [
@@ -86,5 +90,44 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles): bool
     {
         return in_array($this->role_as, $roles);
+    }
+
+    // Technician Type Helpers
+    public function isInsideTechnician(): bool
+    {
+        return $this->technician_type === 'inside';
+    }
+
+    public function isOutsideTechnician(): bool
+    {
+        return $this->technician_type === 'outside';
+    }
+
+    public function isFullTimeTechnician(): bool
+    {
+        return $this->employment_type === 'full_time';
+    }
+
+    public function isPartTimeTechnician(): bool
+    {
+        return $this->employment_type === 'part_time';
+    }
+
+    public function getTechnicianTypeLabel(): string
+    {
+        return match($this->technician_type) {
+            'inside' => 'Inside Technician',
+            'outside' => 'Outside Technician',
+            default => 'Not a Technician',
+        };
+    }
+
+    public function getEmploymentTypeLabel(): string
+    {
+        return match($this->employment_type) {
+            'full_time' => 'Full Time',
+            'part_time' => 'Part Time',
+            default => 'N/A',
+        };
     }
 }
