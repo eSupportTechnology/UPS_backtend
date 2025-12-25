@@ -23,7 +23,7 @@ class InventoryItemReturnRequest extends FormRequest
     {
         return [
             'reference_id'   => 'required|uuid',
-            'usage_type'     => 'required|in:maintenance,contract',
+            'usage_type'     => 'required|in:maintenance,contract,inside_job,outside_job',
             'usages'         => 'required|array|min:1',
             'usages.*.inventory_id' => 'required|uuid|exists:shop_inventories,id',
             'usages.*.quantity'     => 'required|integer|min:1',
