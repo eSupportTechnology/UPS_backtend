@@ -7,6 +7,7 @@ use App\Action\Ticket\AssignTicket;
 use App\Action\Ticket\CompleteTicket;
 use App\Action\Ticket\CreateTicket;
 use App\Action\Ticket\GetAllTickets;
+use App\Action\Ticket\GetTicketById;
 use App\Action\Ticket\GetTicketsByAssignedTo;
 use App\Action\Ticket\GetTicketsByCustomer;
 use App\Action\Ticket\ExportTicketsExcel;
@@ -19,6 +20,12 @@ use App\Action\Ticket\CreateQuote;
 use App\Action\Ticket\ApproveQuote;
 use App\Action\Ticket\StartRepair;
 use App\Action\Ticket\CompleteInsideJob;
+use App\Action\Ticket\ExportBulkTicketsPdf;
+use App\Action\Ticket\ExportBulkTicketsCsv;
+use App\Action\Ticket\ExportDateRangeTicketsCsv;
+use App\Action\Ticket\ExportTypeWiseTicketsCsv;
+use App\Action\Ticket\ExportStatusWiseTicketsCsv;
+use App\Action\Ticket\ExportPriorityWiseTicketsCsv;
 use App\Http\Requests\Ticket\AcceptTicketRequest;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CompleteTicketRequest;
@@ -38,12 +45,19 @@ use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TicketController extends Controller
 {
     public function createTicket(TicketRequest $request, CreateTicket $createTicket): JsonResponse
     {
         return response()->json($createTicket($request->validated()));
+    }
+
+    public function getTicketById(string $ticketId, GetTicketById $getTicketById): JsonResponse
+    {
+        $result = $getTicketById($ticketId);
+        return response()->json($result);
     }
 
     public function getAllTickets(GetAllTicketsRequest $request, GetAllTickets $getAllTickets): JsonResponse
@@ -190,5 +204,61 @@ class TicketController extends Controller
                 'message' => 'Ticket not found'
             ], 404);
         }
+    }
+
+    // Advanced Export Endpoints
+    public function exportBulkTicketsPdf(ExportBulkTicketsPdf $action): Response
+    {
+        return $action();
+    }
+
+    public function exportBulkTicketsCsv(ExportBulkTicketsCsv $action): StreamedResponse
+    {
+        return $action();
+    }
+
+    public function exportDateRangeTicketsCsv(ExportDateRangeTicketsCsv $action): StreamedResponse
+    {
+        $fromDate = request()->query('from_date');
+        $toDate = request()->query('to_date');
+
+        if (!$fromDate || !$toDate) {
+            abort(400, 'Missing required parameters: from_date and to_date');
+        }
+
+        return $action($fromDate, $toDate);
+    }
+
+    public function exportTypeWiseTicketsCsv(ExportTypeWiseTicketsCsv $action): StreamedResponse
+    {
+        $type = request()->query('type');
+
+        if (!$type || !in_array($type, ['personal', 'company'])) {
+            abort(400, 'Invalid or missing type parameter');
+        }
+
+        return $action($type);
+    }
+
+    public function exportStatusWiseTicketsCsv(ExportStatusWiseTicketsCsv $action): StreamedResponse
+    {
+        $status = request()->query('status');
+
+        if (!$status) {
+            abort(400, 'Missing required parameter: status');
+        }
+
+        return $action($status);
+    }
+
+    public function exportPriorityWiseTicketsCsv(ExportPriorityWiseTicketsCsv $action): StreamedResponse
+    {
+        $priority = request()->query('priority');
+
+        if (!$priority) {
+            abort(400, 'Missing required parameter: priority');
+        }
+
+        return $action($priority);
     }
 }

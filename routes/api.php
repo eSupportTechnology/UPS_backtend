@@ -89,11 +89,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Ticket
     Route::get('/all-tickets', [TicketController::class, 'getAllTickets']);
+    Route::get('/ticket/{ticketId}', [TicketController::class, 'getTicketById']);
+    Route::post('/create-ticket', [TicketController::class, 'createTicket']);
     Route::post('/assign-ticket', [TicketController::class, 'assignTicket']);
 
     Route::get('/tickets/export/excel', [TicketController::class, 'exportExcel']);
     Route::get('/tickets/export/pdf', [TicketController::class, 'exportPdf']);
     Route::get('/tickets/report', [TicketController::class, 'generateReport']);
+
+    // Advanced ticket export endpoints
+    Route::get('/tickets/export/bulk-pdf', [TicketController::class, 'exportBulkTicketsPdf']);
+    Route::get('/tickets/export/bulk-csv', [TicketController::class, 'exportBulkTicketsCsv']);
+    Route::get('/tickets/export/date-range-csv', [TicketController::class, 'exportDateRangeTicketsCsv']);
+    Route::get('/tickets/export/type-wise-csv', [TicketController::class, 'exportTypeWiseTicketsCsv']);
+    Route::get('/tickets/export/status-wise-csv', [TicketController::class, 'exportStatusWiseTicketsCsv']);
+    Route::get('/tickets/export/priority-wise-csv', [TicketController::class, 'exportPriorityWiseTicketsCsv']);
 
     // Inside Job Management
     Route::post('/inside-jobs/create-direct', [TicketController::class, 'createInsideJobDirect']);

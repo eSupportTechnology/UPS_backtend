@@ -23,8 +23,11 @@ class TicketRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|exists:users,id',
+            'branch_id' => 'nullable|exists:company_branches,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'priority' => 'nullable|string|in:low,medium,high,urgent',
+            'address' => 'nullable|string|max:500',
             'district' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'gramsewa_division' => 'nullable|string|max:255',

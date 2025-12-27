@@ -14,21 +14,28 @@ class GetTicketsByCustomer
             $query = Ticket::select([
                 'tickets.id',
                 'tickets.customer_id',
+                'tickets.branch_id',
                 'tickets.title',
                 'tickets.description',
+                'tickets.address',
                 'tickets.photo_paths',
                 'tickets.status',
                 'tickets.priority',
                 'tickets.assigned_to',
                 'tickets.accepted_at',
                 'tickets.completed_at',
+                'tickets.created_at',
             ])
-                ->leftJoin('users', 'tickets.assigned_to', '=', 'users.id')
+                ->join('users as customers', 'tickets.customer_id', '=', 'customers.id')
+                ->leftJoin('users as technicians', 'tickets.assigned_to', '=', 'technicians.id')
+                ->leftJoin('company_branches', 'tickets.branch_id', '=', 'company_branches.id')
                 ->addSelect([
-                    'users.name as technician_name',
-                    'users.email as technician_email',
-                    'users.phone as technician_phone',
-                    'users.address as technician_address',
+                    'customers.customer_type',
+                    'company_branches.branch_name',
+                    'company_branches.is_primary',
+                    'technicians.name as technician_name',
+                    'technicians.email as technician_email',
+                    'technicians.phone as technician_phone',
                 ]);
             $query->where('tickets.customer_id', $filters['customer_id']);
 

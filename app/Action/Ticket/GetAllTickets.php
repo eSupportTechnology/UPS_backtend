@@ -15,8 +15,10 @@ class GetAllTickets
             $query = Ticket::select([
                 'tickets.id',
                 'tickets.customer_id',
+                'tickets.branch_id',
                 'tickets.title',
                 'tickets.description',
+                'tickets.address',
                 'tickets.photo_paths',
                 'tickets.status',
                 'tickets.priority',
@@ -30,11 +32,14 @@ class GetAllTickets
             ])
                 ->join('users', 'tickets.customer_id', '=', 'users.id')
                 ->leftJoin('users as technicians', 'tickets.assigned_to', '=', 'technicians.id')
+                ->leftJoin('company_branches', 'tickets.branch_id', '=', 'company_branches.id')
                 ->addSelect([
                     'users.name as customer_name',
                     'users.email as customer_email',
                     'users.phone as customer_phone',
-                    'users.address as customer_address',
+                    'users.customer_type',
+                    'company_branches.branch_name',
+                    'company_branches.is_primary',
                     'technicians.name as technician_name',
                     'technicians.email as technician_email',
                     'technicians.phone as technician_phone',
@@ -44,9 +49,27 @@ class GetAllTickets
             $this->applySorting($query, $filters);
 
             $perPage = $filters['per_page'] ?? 10;
-            $tickets = $query->paginate($perPage);
+            $ticketsPaginated = $query->paginate($perPage);
 
-            return CommonResponse::sendSuccessResponseWithData('tickets', $tickets);
+            // Extract tickets and pagination data
+            $ticketsData = $ticketsPaginated->items();
+            $paginationData = [
+                'current_page' => $ticketsPaginated->currentPage(),
+                'last_page' => $ticketsPaginated->lastPage(),
+                'per_page' => $ticketsPaginated->perPage(),
+                'total' => $ticketsPaginated->total(),
+                'from' => $ticketsPaginated->firstItem(),
+                'to' => $ticketsPaginated->lastItem(),
+            ];
+
+            return [
+                'success' => true,
+                'message' => 'Tickets retrieved successfully',
+                'data' => [
+                    'tickets' => $ticketsData,
+                    'pagination' => $paginationData,
+                ],
+            ];
         } catch (\Exception $e) {
             Log::error('Failed to fetch tickets: ' . $e->getMessage(), [
                 'filters' => $filters,
