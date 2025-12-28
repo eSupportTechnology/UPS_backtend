@@ -18,6 +18,8 @@ class Ticket extends Model
         'job_number',
         'parent_ticket_id',
         'customer_id',
+        'customer_name',
+        'customer_phone',
         'branch_id',
         'title',
         'description',

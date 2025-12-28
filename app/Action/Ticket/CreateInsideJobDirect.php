@@ -25,7 +25,8 @@ class CreateInsideJobDirect
             $insideJob = Ticket::create([
                 'job_type' => 'inside',
                 'job_number' => $jobNumber,
-                'customer_id' => $data['customer_id'],
+                'customer_name' => $data['customer_name'],
+                'customer_phone' => $data['customer_phone'],
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'ups_serial_number' => $data['ups_serial_number'] ?? null,
