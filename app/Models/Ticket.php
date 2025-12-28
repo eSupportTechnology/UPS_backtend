@@ -62,6 +62,11 @@ class Ticket extends Model
         'approval_decision_at' => 'datetime',
         'in_repair_at' => 'datetime',
     ];
+    public function customer()
+    {
+        return $this->belongsTo(User::class, 'customer_id', 'id');
+    }
+
     public function assignedTechnician()
     {
         return $this->belongsTo(User::class, 'assigned_to', 'id');
@@ -78,7 +83,7 @@ class Ticket extends Model
         return $this->belongsTo(Ticket::class, 'parent_ticket_id');
     }
 
-    public function insideJobs()
+    public function childInsideJobs()
     {
         return $this->hasMany(Ticket::class, 'parent_ticket_id');
     }

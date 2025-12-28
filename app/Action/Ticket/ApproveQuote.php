@@ -20,12 +20,9 @@ class ApproveQuote
         try {
             $ticket = Ticket::findOrFail($data['ticket_id']);
 
-            if ($ticket->approval_status !== 'pending') {
-                throw new \Exception('Quote has already been decided');
-            }
-
             $approved = $data['approved'];
 
+            // Allow approval/rejection from any status (enable bidirectional workflow)
             $ticket->update([
                 'approval_status' => $approved ? 'approved' : 'rejected',
                 'approval_decision_at' => Carbon::now(),

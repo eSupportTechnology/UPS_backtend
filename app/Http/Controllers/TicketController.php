@@ -162,6 +162,45 @@ class TicketController extends Controller
         return response()->json($action($request->validated()));
     }
 
+    public function updateInsideJobStatus(): JsonResponse
+    {
+        try {
+            $ticket_id = request()->input('ticket_id');
+            $status = request()->input('status');
+
+            if (!$ticket_id || !$status) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing required fields: ticket_id, status'
+                ], 400);
+            }
+
+            $ticket = Ticket::findOrFail($ticket_id);
+
+            // Validate status
+            $validStatuses = ['pending_inspection', 'in_repair', 'completed', 'quote_rejected', 'inspected', 'quoted', 'approved_for_repair'];
+            if (!in_array($status, $validStatuses)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status'
+                ], 400);
+            }
+
+            $ticket->update(['status' => $status]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully',
+                'data' => $ticket
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update status'
+            ], 500);
+        }
+    }
+
     public function getInsideJobs(): JsonResponse
     {
         $insideJobs = Ticket::insideJobs()

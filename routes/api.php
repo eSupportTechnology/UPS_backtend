@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Technicians
     Route::post('/create-technician', [UserController::class, 'createTechnician']);
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);
+    Route::get('/inside-jobs/technicians', [UserController::class, 'getInsideJobsTechnicians']);
     Route::get('/technician/{id}', [UserController::class, 'getTechnician']);
     Route::put('/technician/{id}', [UserController::class, 'updateTechnician']);
     Route::delete('/technician/{id}', [UserController::class, 'deleteTechnician']);
@@ -115,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/inside-jobs/approve-quote', [TicketController::class, 'approveQuote']);
     Route::post('/inside-jobs/start-repair', [TicketController::class, 'startRepair']);
     Route::post('/inside-jobs/complete', [TicketController::class, 'completeInsideJob']);
+    Route::post('/inside-jobs/update-status', [TicketController::class, 'updateInsideJobStatus']);
 
     //Technician Users
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);

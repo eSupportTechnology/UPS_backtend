@@ -19,10 +19,7 @@ class StartRepair
         try {
             $ticket = Ticket::findOrFail($data['ticket_id']);
 
-            if (!$ticket->isApproved()) {
-                throw new \Exception('Quote must be approved before starting repair');
-            }
-
+            // Update to in_repair status - allow from any status
             $ticket->update([
                 'in_repair_at' => now(),
                 'status' => 'in_repair',

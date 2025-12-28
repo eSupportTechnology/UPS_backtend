@@ -63,6 +63,28 @@ class UserController extends Controller
         return response()->json($result);
     }
 
+    public function getInsideJobsTechnicians(): JsonResponse
+    {
+        try {
+            $technicians = User::where('role_as', User::ROLE_TECHNICIAN)
+                ->where('is_active', true)
+                ->where('technician_type', 'inside')
+                ->select('id', 'name', 'email', 'phone', 'technician_type')
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $technicians
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch technicians'
+            ], 500);
+        }
+    }
+
     public function createTechnician(TechnicianCreateRequest $request, CreateTechnician $createTechnician): JsonResponse
     {
         return response()->json($createTechnician($request->validated()));
