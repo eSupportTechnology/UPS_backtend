@@ -12,7 +12,7 @@ class GetAllUsers
     public function __invoke(array $filters = []): array
     {
         try {
-            $query = User::select('id', 'name', 'email', 'role_as', 'phone', 'address', 'is_active', 'created_at');
+            $query = User::select('id', 'name', 'email', 'role_as', 'phone', 'address', 'customer_type', 'company_name', 'is_active', 'created_at');
             $this->applyFilters($query, $filters);
             $this->applySorting($query, $filters);
 

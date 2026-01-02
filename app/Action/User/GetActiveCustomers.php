@@ -11,7 +11,7 @@ class GetActiveCustomers
     public function __invoke(): array
     {
         try {
-            $customers = User::select('id', 'name', 'email')
+            $customers = User::select('id', 'name', 'email', 'customer_type', 'company_name')
                 ->where('role_as', User::ROLE_CUSTOMER)
                 ->where('is_active', true)
                 ->orderBy('name', 'asc')

@@ -19,11 +19,11 @@ class InventoryUsageRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-        public function rules(): array
+    public function rules(): array
     {
         return [
             'reference_id'   => 'required|uuid',
-            'usage_type'     => 'required|in:maintenance,contract',
+            'usage_type'     => 'required|in:maintenance,contract,inside_job,outside_job',
             'usages'         => 'required|array|min:1',
             'usages.*.inventory_id' => 'required|uuid|exists:shop_inventories,id',
             'usages.*.quantity'     => 'required|integer|min:1',

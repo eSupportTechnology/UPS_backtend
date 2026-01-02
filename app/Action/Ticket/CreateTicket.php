@@ -14,6 +14,11 @@ class CreateTicket
         DB::beginTransaction();
 
         try {
+            // Set job_type to outside if not already set
+            if (!isset($data['job_type'])) {
+                $data['job_type'] = 'outside';
+            }
+
             if (isset($data['photos']) && is_array($data['photos'])) {
                 $paths = [];
                 foreach ($data['photos'] as $photo) {
@@ -24,17 +29,24 @@ class CreateTicket
                 unset($data['photos']);
             }
 
-            Ticket::create($data);
+            $ticket = Ticket::create($data);
 
             DB::commit();
 
-            return CommonResponse::sendSuccessResponse('Ticket created successfully');
+            return [
+                'success' => true,
+                'message' => 'Ticket created successfully',
+                'data' => $ticket,
+            ];
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Failed to create ticket: ' . $e->getMessage(), ['data' => $data]);
 
-            return CommonResponse::sendBadResponseWithMessage('Failed to create ticket');
+            return [
+                'success' => false,
+                'message' => 'Failed to create ticket: ' . $e->getMessage(),
+            ];
         }
     }
 }

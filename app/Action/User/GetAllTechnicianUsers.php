@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Log;
 
 class GetAllTechnicianUsers
 {
-    public function __invoke(): array
+    public function __invoke(array $filters = []): array
     {
         try {
             $ROLE_TECHNICIAN = 4;
 
-            $users = User::select(
+            $query = User::select(
                 'id',
                 'name',
                 'email',
@@ -21,12 +21,21 @@ class GetAllTechnicianUsers
                 'phone',
                 'address',
                 'is_active',
+                'technician_type',
+                'employment_type',
+                'profile_image',
+                'specialization',
                 'created_at'
             )
                 ->where('is_active', 1)
-                ->where('role_as', $ROLE_TECHNICIAN)
-                ->orderBy('created_at', 'desc')
-                ->get();
+                ->where('role_as', $ROLE_TECHNICIAN);
+
+            // Filter by technician type if provided
+            if (!empty($filters['technician_type'])) {
+                $query->where('technician_type', $filters['technician_type']);
+            }
+
+            $users = $query->orderBy('created_at', 'desc')->get();
             return CommonResponse::sendSuccessResponseWithData('users', $users);
         } catch (\Exception $e) {
             Log::error('Failed to fetch technician users: ' . $e->getMessage(), [

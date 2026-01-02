@@ -6,12 +6,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CommonResponse
 {
-    public static function sendSuccessResponse(string $message): array
+    public static function sendSuccessResponse(string $message, array $data = []): array
     {
-        return [
+        $response = [
             'status' => Response::HTTP_OK,
             'message' => $message,
         ];
+
+        // Merge data if provided
+        if (!empty($data)) {
+            $response = array_merge($response, $data);
+        }
+
+        return $response;
     }
 
     public static function sendBadResponse(): array

@@ -2,14 +2,12 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class TechnicianLocationUpdated implements ShouldBroadcast
+class TechnicianLocationUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -30,26 +28,4 @@ class TechnicianLocationUpdated implements ShouldBroadcast
         ]);
     }
 
-    public function broadcastOn(): array
-    {
-        return [
-            new Channel('tracking.' . $this->technicianId),
-            new Channel('job.' . $this->jobId),
-        ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'TechnicianLocationUpdated';
-    }
-
-    public function broadcastWith(): array
-    {
-        return [
-            'technician_id' => $this->technicianId,
-            'job_id' => $this->jobId,
-            'points' => $this->points,
-            'timestamp' => now()->toIso8601String(),
-        ];
-    }
 }

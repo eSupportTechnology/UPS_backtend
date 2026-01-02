@@ -15,8 +15,11 @@ class GetTicketsByAssignedTo
             $query = Ticket::with('assignedTechnician')
                 ->select([
                     'tickets.id',
+                    'tickets.customer_id',
+                    'tickets.branch_id',
                     'tickets.title',
                     'tickets.description',
+                    'tickets.address',
                     'tickets.photo_paths',
                     'tickets.status',
                     'tickets.priority',
@@ -28,11 +31,14 @@ class GetTicketsByAssignedTo
                     'tickets.created_at',
                 ])
                 ->join('users', 'tickets.customer_id', '=', 'users.id')
+                ->leftJoin('company_branches', 'tickets.branch_id', '=', 'company_branches.id')
                 ->addSelect([
                     'users.name as customer_name',
                     'users.email as customer_email',
                     'users.phone as customer_phone',
-                    'users.address as customer_address',
+                    'users.customer_type',
+                    'company_branches.branch_name',
+                    'company_branches.is_primary',
                 ])
                 ->where('tickets.assigned_to', $assignedTo);
 
