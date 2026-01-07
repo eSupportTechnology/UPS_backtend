@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/shop-inventories/export/excel', [ShopInventoryController::class, 'exportExcel']);
     Route::get('/shop-inventories/export/pdf', [ShopInventoryController::class, 'exportPdf']);
     Route::get('/shop-inventories/report', [ShopInventoryController::class, 'generateReport']);
+    Route::get('/shop-inventories/categories-brands', [ShopInventoryController::class, 'getCategoriesAndBrands']);
 
     // Branches
     Route::get('/all-branches', [BranchController::class, 'getAllBranches']);
@@ -117,12 +118,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/inside-jobs/start-repair', [TicketController::class, 'startRepair']);
     Route::post('/inside-jobs/complete', [TicketController::class, 'completeInsideJob']);
     Route::post('/inside-jobs/update-status', [TicketController::class, 'updateInsideJobStatus']);
+    Route::post('/inside-jobs/reject', [TicketController::class, 'rejectInsideJob']);
 
     // Planned Materials Routes
     Route::post('/inside-jobs/add-material', [TicketController::class, 'addPlannedMaterial']);
     Route::post('/inside-jobs/remove-material', [TicketController::class, 'removePlannedMaterial']);
     Route::get('/inside-jobs/{ticket_id}/materials', [TicketController::class, 'getPlannedMaterials']);
     Route::post('/inside-jobs/update-material-quantity', [TicketController::class, 'updatePlannedMaterialQuantity']);
+
+    // Inside Jobs Export Routes
+    Route::get('/inside-jobs/export/pdf', [TicketController::class, 'exportInsideJobsPdf']);
+    Route::get('/inside-jobs/export/excel', [TicketController::class, 'exportInsideJobsExcel']);
+
+    // Materials Export Routes
+    Route::get('/materials/export/pdf', [TicketController::class, 'exportMaterialsPdf']);
+    Route::get('/materials/export/excel', [TicketController::class, 'exportMaterialsExcel']);
 
     //Technician Users
     Route::get('/all-technician-users', [UserController::class, 'getAllTechnicianUsers']);

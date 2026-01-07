@@ -26,6 +26,10 @@ use App\Action\Ticket\ExportDateRangeTicketsCsv;
 use App\Action\Ticket\ExportTypeWiseTicketsCsv;
 use App\Action\Ticket\ExportStatusWiseTicketsCsv;
 use App\Action\Ticket\ExportPriorityWiseTicketsCsv;
+use App\Action\Ticket\ExportInsideJobsPdf;
+use App\Action\Ticket\ExportInsideJobsExcel;
+use App\Action\Ticket\ExportMaterialsPdf;
+use App\Action\Ticket\ExportMaterialsExcel;
 use App\Http\Requests\Ticket\AcceptTicketRequest;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CompleteTicketRequest;
@@ -186,7 +190,19 @@ class TicketController extends Controller
                 ], 400);
             }
 
-            $ticket->update(['status' => $status]);
+            // If completing, also clear planned materials
+            if ($status === 'completed') {
+                $ticket->update([
+                    'status' => $status,
+                    'completed_at' => now(),
+                    'planned_materials' => null,
+                ]);
+
+                // Delete planned materials from the job_planned_materials table
+                \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)->delete();
+            } else {
+                $ticket->update(['status' => $status]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -196,21 +212,148 @@ class TicketController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update status'
+                'message' => 'Failed to update status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function rejectInsideJob(): JsonResponse
+    {
+        try {
+            $ticket_id = request()->input('ticket_id');
+            $reason = request()->input('reason');
+            $rollback_material_ids = request()->input('rollback_material_ids', []);
+
+            if (!$ticket_id || !$reason) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing required fields: ticket_id, reason'
+                ], 400);
+            }
+
+            $ticket = Ticket::findOrFail($ticket_id);
+
+            // Rollback selected materials to inventory
+            if (!empty($rollback_material_ids)) {
+                $materials = \App\Models\JobPlannedMaterial::whereIn('id', $rollback_material_ids)
+                    ->where('ticket_id', $ticket_id)
+                    ->get();
+
+                foreach ($materials as $material) {
+                    // Restore inventory quantity
+                    $inventory = \App\Models\ShopInventory::find($material->inventory_id);
+                    if ($inventory) {
+                        $inventory->update(['quantity' => $inventory->quantity + $material->quantity]);
+                    }
+                    // Delete the planned material
+                    $material->delete();
+                }
+            }
+
+            // Delete remaining planned materials without rollback
+            \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)->delete();
+
+            // Update ticket status to rejected
+            $ticket->update([
+                'status' => 'quote_rejected',
+                'rejection_reason' => $reason,
+                'rejected_at' => now(),
+                'planned_materials' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Job rejected successfully',
+                'data' => $ticket
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject job: ' . $e->getMessage()
             ], 500);
         }
     }
 
     public function getInsideJobs(): JsonResponse
     {
-        $insideJobs = Ticket::insideJobs()
-            ->with(['customer', 'assignedTechnician', 'inspector', 'quoter', 'quoteLineItems', 'plannedMaterials'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Ticket::insideJobs()
+            ->with(['customer', 'assignedTechnician', 'inspector', 'quoter', 'quoteLineItems', 'plannedMaterials']);
+
+        // Search filter (job number, customer name, UPS serial)
+        if ($search = request()->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('job_number', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('ups_serial_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('phone', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Status filter (single or multiple comma-separated)
+        if ($status = request()->query('status')) {
+            $statuses = explode(',', $status);
+            $query->whereIn('status', $statuses);
+        }
+
+        // Priority filter
+        if ($priority = request()->query('priority')) {
+            $query->where('priority', $priority);
+        }
+
+        // Technician filter
+        if ($technician = request()->query('technician')) {
+            $query->where('assigned_to', $technician);
+        }
+
+        // Date range filter
+        if ($fromDate = request()->query('from_date')) {
+            $query->whereDate('created_at', '>=', $fromDate);
+        }
+        if ($toDate = request()->query('to_date')) {
+            $query->whereDate('created_at', '<=', $toDate);
+        }
+
+        // Today only filter
+        if (request()->query('today') === 'true') {
+            $query->whereDate('created_at', now()->toDateString());
+        }
+
+        // Sorting
+        $sortBy = request()->query('sort_by', 'created_at');
+        $sortOrder = request()->query('sort_order', 'desc');
+        $allowedSorts = ['created_at', 'job_number', 'priority', 'status', 'customer_name'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Pagination
+        $perPage = min((int) request()->query('per_page', 15), 100);
+        $insideJobs = $query->paginate($perPage);
+
+        // Add summary counts for dashboard
+        $statusCounts = Ticket::insideJobs()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
 
         return response()->json([
             'success' => true,
-            'data' => $insideJobs
+            'data' => $insideJobs,
+            'status_counts' => $statusCounts,
+            'filters_applied' => [
+                'search' => request()->query('search'),
+                'status' => request()->query('status'),
+                'priority' => request()->query('priority'),
+                'technician' => request()->query('technician'),
+                'from_date' => request()->query('from_date'),
+                'to_date' => request()->query('to_date'),
+            ]
         ]);
     }
 
@@ -481,5 +624,81 @@ class TicketController extends Controller
         }
 
         return $action($priority);
+    }
+
+    // Inside Jobs Export Endpoints
+    public function exportInsideJobsPdf(ExportInsideJobsPdf $action): Response
+    {
+        $filters = [
+            'search' => request()->query('search'),
+            'status' => request()->query('status'),
+            'priority' => request()->query('priority'),
+            'technician' => request()->query('technician'),
+            'from_date' => request()->query('from_date'),
+            'to_date' => request()->query('to_date'),
+            'today' => request()->query('today'),
+        ];
+
+        // Remove null values
+        $filters = array_filter($filters, fn($value) => $value !== null);
+
+        return $action($filters);
+    }
+
+    public function exportInsideJobsExcel(ExportInsideJobsExcel $action): BinaryFileResponse
+    {
+        $filters = [
+            'search' => request()->query('search'),
+            'status' => request()->query('status'),
+            'priority' => request()->query('priority'),
+            'technician' => request()->query('technician'),
+            'from_date' => request()->query('from_date'),
+            'to_date' => request()->query('to_date'),
+            'today' => request()->query('today'),
+        ];
+
+        // Remove null values
+        $filters = array_filter($filters, fn($value) => $value !== null);
+
+        return $action($filters);
+    }
+
+    // Materials Export Endpoints
+    public function exportMaterialsPdf(ExportMaterialsPdf $action): Response
+    {
+        $filters = [
+            'search' => request()->query('search'),
+            'category' => request()->query('category'),
+            'brand' => request()->query('brand'),
+            'job_id' => request()->query('job_id'),
+            'status' => request()->query('status'),
+            'from_date' => request()->query('from_date'),
+            'to_date' => request()->query('to_date'),
+            'today' => request()->query('today'),
+        ];
+
+        // Remove null values
+        $filters = array_filter($filters, fn($value) => $value !== null);
+
+        return $action($filters);
+    }
+
+    public function exportMaterialsExcel(ExportMaterialsExcel $action): BinaryFileResponse
+    {
+        $filters = [
+            'search' => request()->query('search'),
+            'category' => request()->query('category'),
+            'brand' => request()->query('brand'),
+            'job_id' => request()->query('job_id'),
+            'status' => request()->query('status'),
+            'from_date' => request()->query('from_date'),
+            'to_date' => request()->query('to_date'),
+            'today' => request()->query('today'),
+        ];
+
+        // Remove null values
+        $filters = array_filter($filters, fn($value) => $value !== null);
+
+        return $action($filters);
     }
 }

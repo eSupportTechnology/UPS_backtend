@@ -10,6 +10,7 @@ use App\Action\Inventory\UpdateInventory;
 use App\Action\Inventory\ExportInventoryExcel;
 use App\Action\Inventory\ExportInventoryPdf;
 use App\Action\Inventory\GenerateInventoryReport;
+use App\Action\Inventory\GetCategoriesAndBrands;
 use App\Http\Requests\Inventory\GetAllInventoriesRequest;
 use App\Http\Requests\Inventory\ShopInventoryRequest;
 use App\Http\Requests\Inventory\InventoryReportRequest;
@@ -59,5 +60,10 @@ class ShopInventoryController extends Controller
     public function generateReport(InventoryReportRequest $request, GenerateInventoryReport $action): JsonResponse
     {
         return response()->json($action($request->validated()));
+    }
+
+    public function getCategoriesAndBrands(GetCategoriesAndBrands $action): JsonResponse
+    {
+        return response()->json($action());
     }
 }
