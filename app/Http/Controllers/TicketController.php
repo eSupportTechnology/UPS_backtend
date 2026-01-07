@@ -204,7 +204,7 @@ class TicketController extends Controller
     public function getInsideJobs(): JsonResponse
     {
         $insideJobs = Ticket::insideJobs()
-            ->with(['customer', 'assignedTechnician', 'inspector', 'quoter', 'quoteLineItems'])
+            ->with(['customer', 'assignedTechnician', 'inspector', 'quoter', 'quoteLineItems', 'plannedMaterials'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -242,6 +242,188 @@ class TicketController extends Controller
                 'success' => false,
                 'message' => 'Ticket not found'
             ], 404);
+        }
+    }
+
+    public function addPlannedMaterial(): JsonResponse
+    {
+        try {
+            $ticket_id = request()->input('ticket_id');
+            $inventory_id = request()->input('inventory_id');
+            $product_name = request()->input('product_name');
+            $brand = request()->input('brand');
+            $category = request()->input('category');
+            $quantity = request()->input('quantity', 1);
+
+            if (!$ticket_id || !$inventory_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing required fields: ticket_id, inventory_id'
+                ], 400);
+            }
+
+            $ticket = Ticket::findOrFail($ticket_id);
+            $inventory = \App\Models\ShopInventory::findOrFail($inventory_id);
+
+            // Check stock
+            if ($inventory->quantity < $quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient stock for {$product_name}. Available: {$inventory->quantity}"
+                ], 400);
+            }
+
+            // Check if material already exists for this job
+            $existing = \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)
+                ->where('inventory_id', $inventory_id)
+                ->first();
+
+            if ($existing) {
+                // Update quantity
+                $newQty = $existing->quantity + $quantity;
+                if ($inventory->quantity < $quantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock for {$product_name}. Available: {$inventory->quantity}"
+                    ], 400);
+                }
+                $existing->update(['quantity' => $newQty]);
+            } else {
+                // Create new entry
+                \App\Models\JobPlannedMaterial::create([
+                    'ticket_id' => $ticket_id,
+                    'inventory_id' => $inventory_id,
+                    'product_name' => $product_name,
+                    'brand' => $brand,
+                    'category' => $category,
+                    'quantity' => $quantity,
+                ]);
+            }
+
+            // Decrease inventory
+            $inventory->update(['quantity' => $inventory->quantity - $quantity]);
+
+            // Get updated materials list
+            $materials = \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Material added successfully',
+                'data' => $materials
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add material: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function removePlannedMaterial(): JsonResponse
+    {
+        try {
+            $material_id = request()->input('material_id');
+
+            if (!$material_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing required field: material_id'
+                ], 400);
+            }
+
+            $material = \App\Models\JobPlannedMaterial::findOrFail($material_id);
+            $ticket_id = $material->ticket_id;
+
+            // Restore inventory
+            $inventory = \App\Models\ShopInventory::find($material->inventory_id);
+            if ($inventory) {
+                $inventory->update(['quantity' => $inventory->quantity + $material->quantity]);
+            }
+
+            // Delete material
+            $material->delete();
+
+            // Get updated materials list
+            $materials = \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Material removed successfully',
+                'data' => $materials
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove material: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPlannedMaterials(string $ticket_id): JsonResponse
+    {
+        try {
+            $materials = \App\Models\JobPlannedMaterial::where('ticket_id', $ticket_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $materials
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get materials: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updatePlannedMaterialQuantity(): JsonResponse
+    {
+        try {
+            $material_id = request()->input('material_id');
+            $quantity = request()->input('quantity');
+
+            if (!$material_id || !$quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Missing required fields: material_id, quantity'
+                ], 400);
+            }
+
+            $material = \App\Models\JobPlannedMaterial::findOrFail($material_id);
+            $inventory = \App\Models\ShopInventory::findOrFail($material->inventory_id);
+
+            $oldQuantity = $material->quantity;
+            $diff = $quantity - $oldQuantity;
+
+            if ($diff > 0) {
+                // Need more from inventory
+                if ($inventory->quantity < $diff) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock. Available: {$inventory->quantity}"
+                    ], 400);
+                }
+                $inventory->update(['quantity' => $inventory->quantity - $diff]);
+            } else {
+                // Return to inventory
+                $inventory->update(['quantity' => $inventory->quantity + abs($diff)]);
+            }
+
+            $material->update(['quantity' => $quantity]);
+
+            // Get updated materials list
+            $materials = \App\Models\JobPlannedMaterial::where('ticket_id', $material->ticket_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quantity updated successfully',
+                'data' => $materials
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update quantity: ' . $e->getMessage()
+            ], 500);
         }
     }
 

@@ -28,7 +28,11 @@ class CompleteInsideJob
                 'actual_parts_used' => $data['actual_parts_used'] ?? null,
                 'completed_at' => now(),
                 'status' => 'completed',
+                'planned_materials' => null,
             ]);
+
+            // Delete planned materials from the new table
+            \App\Models\JobPlannedMaterial::where('ticket_id', $ticket->id)->delete();
 
             DB::commit();
 

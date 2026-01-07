@@ -49,12 +49,14 @@ class Ticket extends Model
         'in_repair_at',
         'repair_notes',
         'actual_parts_used',
+        'planned_materials',
     ];
 
     protected $casts = [
         'photo_paths' => 'array',
         'quote_data' => 'array',
         'actual_parts_used' => 'array',
+        'planned_materials' => 'array',
         'accepted_at' => 'datetime',
         'completed_at' => 'datetime',
         'inspected_at' => 'datetime',
@@ -107,6 +109,11 @@ class Ticket extends Model
     public function inventoryUsages()
     {
         return $this->hasMany(InventoryItemUsage::class, 'reference_id');
+    }
+
+    public function plannedMaterials()
+    {
+        return $this->hasMany(JobPlannedMaterial::class, 'ticket_id');
     }
 
     // Scopes for filtering
